@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Duplex Ventures Christmas</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300&display=swap" rel="stylesheet">
     <style>
@@ -15,10 +15,10 @@
             display: flex; flex-direction: column; align-items: center; padding-top: 5vh;
         }
         
-        /* 修改了标题样式，支持多行，适应手机 */
+        /* 标题样式 */
         h1 {
             color: #fff; font-family: 'Cinzel', serif; 
-            font-size: 26px; /* 稍微调小一点，防止手机上换行太难看 */
+            font-size: 26px; 
             line-height: 1.4;
             letter-spacing: 2px;
             text-align: center;
@@ -32,7 +32,14 @@
             to { text-shadow: 0 0 25px rgba(255, 215, 0, 1); }
         }
 
-        .input_video { display: none; }
+        /* 关键修改：兼容 iOS 的视频隐藏方式 */
+        .input_video { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 1px; height: 1px; 
+            opacity: 0; 
+            pointer-events: none; 
+        }
         
         #loading {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -91,7 +98,8 @@
         </div>
     </div>
 
-    <video class="input_video"></video>
+    <video class="input_video" playsinline webkit-playsinline muted autoplay></video>
+    
     <div id="canvas-container"></div>
 
 <script>
@@ -184,7 +192,7 @@
     const particleTexture = createGlowTexture();
     particleTexture.needsUpdate = true;
 
-    // --- 构建树 (新增手机优化) ---
+    // --- 构建树 (手机优化) ---
     const treeGroup = new THREE.Group(); 
     treeGroup.position.y = 120;
     scene.add(treeGroup);
