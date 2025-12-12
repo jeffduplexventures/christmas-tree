@@ -35,16 +35,29 @@
             text-align: center; width: 100%;
         }
 
+        /* 新增：当前照片指示器 */
+        #card-indicator {
+            margin-top: 10px;
+            color: #ffd700;
+            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            background: rgba(0,0,0,0.6);
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
         .instruction {
             position: absolute; bottom: 30px; width: 100%; text-align: center;
             color: rgba(255, 255, 255, 0.6); font-size: 14px; letter-spacing: 1px;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-            padding-bottom: 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding-bottom: 25px;
             line-height: 1.8;
         }
         .instruction b { color: #ffd700; }
 
-        /* 照片弹窗 */
         #photo-overlay {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%) scale(0.8);
@@ -76,13 +89,16 @@
             Merry Christmas
         </h1>
         
+        <div id="card-indicator">Detecting Hand...</div>
+        
         <div id="photo-overlay">
             <img id="card-image" src="" alt="Christmas Photo">
         </div>
 
         <div class="instruction">
             🖐 <b>Open</b>: Fireworks | ✊ <b>Fist</b>: Tree Mode <br>
-            👋 <b>Rotate Hand</b>: Switch Photos | 👌 <b>Pinch</b>: View Photo
+            👋 <b>Tilt Hand Left/Right</b>: Switch Photo <br>
+            👌 <b>Pinch</b>: View Photo
         </div>
     </div>
 
@@ -91,10 +107,9 @@
 
 <script>
     // ==========================================
-    // 0. 准备照片库 (新增功能)
+    // 0. 准备照片库 & 预加载
     // ==========================================
     
-    // 原来的贺卡生成函数
     function generateOriginalCard() {
         const cvs = document.createElement('canvas');
         cvs.width = 600; cvs.height = 800;
@@ -113,22 +128,25 @@
         return cvs.toDataURL();
     }
 
-    // --- 新增: 照片数组 (5张照片) ---
+    // 5张照片
     const photoGallery = [
-        generateOriginalCard(), // 0: 原创贺卡
-        // 以下使用 Unsplash 的高质量圣诞相关图片作为示例
-        'https://images.unsplash.com/photo-1543589077-47d81606c1bf?w=600&q=80', // 1: 圣诞树
-        'https://images.unsplash.com/photo-1512909006721-3d6018887383?w=600&q=80', // 2: 礼物
-        'https://images.unsplash.com/photo-1482517967863-00e15c9b4405?w=600&q=80', // 3: 雪景
-        'https://images.unsplash.com/photo-1576919228236-a097c32a5cd4?w=600&q=80'  // 4: 彩灯
+        generateOriginalCard(), // 0
+        'https://images.unsplash.com/photo-1543589077-47d81606c1bf?w=600&q=80', // 1
+        'https://images.unsplash.com/photo-1512909006721-3d6018887383?w=600&q=80', // 2
+        'https://images.unsplash.com/photo-1482517967863-00e15c9b4405?w=600&q=80', // 3
+        'https://images.unsplash.com/photo-1576919228236-a097c32a5cd4?w=600&q=80'  // 4
     ];
 
-    // 获取图片元素，后面会动态修改它的 src
+    // 预加载图片 (防止切换时黑屏)
+    photoGallery.forEach(src => { const img = new Image(); img.src = src; });
+
     const cardImageElement = document.getElementById('card-image');
+    const indicatorElement = document.getElementById('card-indicator');
+    let currentPhotoIndex = 0; // 默认第一张
 
 
     // ==========================================
-    // 1. THREE.JS 场景 (保持不变)
+    // 1. THREE.JS 场景
     // ==========================================
     
     const container = document.getElementById('canvas-container');
@@ -168,7 +186,6 @@
     
     const isMobile = window.innerWidth < 768;
     const particleCount = isMobile ? 6000 : 12000; 
-
     const treeHeight = 280;
     const baseRadius = 110;
     
@@ -194,35 +211,20 @@
         const x = r * Math.cos(theta);
         const z = r * Math.sin(theta);
 
-        initialPositions[i*3] = x;
-        initialPositions[i*3+1] = y;
-        initialPositions[i*3+2] = z;
-        positions[i*3] = x;
-        positions[i*3+1] = y;
-        positions[i*3+2] = z;
+        initialPositions[i*3] = x; initialPositions[i*3+1] = y; initialPositions[i*3+2] = z;
+        positions[i*3] = x; positions[i*3+1] = y; positions[i*3+2] = z;
 
         const centerX = 0; const centerY = 50; const centerZ = 0;
         let dirX = x - centerX; let dirY = y - centerY; let dirZ = z - centerZ;
         const len = Math.sqrt(dirX*dirX + dirY*dirY + dirZ*dirZ);
         dirX /= len; dirY /= len; dirZ /= len;
         const speed = 100 + Math.random() * 250; 
-        scatterDirs[i*3] = dirX * speed;
-        scatterDirs[i*3+1] = dirY * speed;
-        scatterDirs[i*3+2] = dirZ * speed;
+        scatterDirs[i*3] = dirX * speed; scatterDirs[i*3+1] = dirY * speed; scatterDirs[i*3+2] = dirZ * speed;
 
-        let c;
-        const rand = Math.random();
-        if (rand > 0.85) c = colRed;
-        else if (rand > 0.50) c = colWhite;
-        else c = Math.random() > 0.5 ? colGold : new THREE.Color(0xffaa00);
-        
-        originalColors[i*3] = c.r;
-        originalColors[i*3+1] = c.g;
-        originalColors[i*3+2] = c.b;
-        
-        colors[i*3] = c.r;
-        colors[i*3+1] = c.g;
-        colors[i*3+2] = c.b;
+        let c; const rand = Math.random();
+        if (rand > 0.85) c = colRed; else if (rand > 0.50) c = colWhite; else c = Math.random() > 0.5 ? colGold : new THREE.Color(0xffaa00);
+        originalColors[i*3] = c.r; originalColors[i*3+1] = c.g; originalColors[i*3+2] = c.b;
+        colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
 
         blinkOffsets[i] = Math.random() * Math.PI * 2;
         blinkSpeeds[i] = 0.5 + Math.random() * 2.0;
@@ -230,13 +232,7 @@
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    
-    const material = new THREE.PointsMaterial({
-        size: isMobile ? 4.5 : 3.5, 
-        vertexColors: true, map: particleTexture,
-        blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 1
-    });
-
+    const material = new THREE.PointsMaterial({ size: isMobile ? 4.5 : 3.5, vertexColors: true, map: particleTexture, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 1 });
     const particles = new THREE.Points(geometry, material);
     treeGroup.add(particles);
 
@@ -246,7 +242,6 @@
     const starOrigin = { x: 0, y: treeHeight/2 + 8, z: 0 };
     topStar.position.set(starOrigin.x, starOrigin.y, starOrigin.z);
     treeGroup.add(topStar);
-    
     const glowMat = new THREE.SpriteMaterial({ map: particleTexture, color: 0xffd700, transparent: true, blending: THREE.AdditiveBlending, opacity: 0.8 });
     const starGlow = new THREE.Sprite(glowMat);
     starGlow.scale.set(70, 70, 1);
@@ -254,17 +249,10 @@
 
 
     // ==========================================
-    // 2. 逻辑控制 (保持不变)
+    // 2. 逻辑控制
     // ==========================================
 
-    let state = {
-        isHandDetected: false,
-        handRotation: 0, // 这个值在 -PI 到 +PI 之间变化
-        isPinch: false,
-        scatterFactor: 0, 
-        targetFactor: 0
-    };
-
+    let state = { isHandDetected: false, handRotation: 0, isPinch: false, scatterFactor: 0, targetFactor: 0 };
     const photoOverlay = document.getElementById('photo-overlay');
     const videoElement = document.getElementsByClassName('input_video')[0];
     
@@ -278,12 +266,11 @@
             state.isHandDetected = true;
             const lm = results.multiHandLandmarks[0];
             
+            // 计算旋转 (atan2 结果是 -PI 到 +PI)
             const p5 = lm[5]; const p17 = lm[17];
-            // 计算手掌旋转角度 (弧度)
             state.handRotation = Math.atan2(p17.y - p5.y, p17.x - p5.x);
 
-            const wrist = lm[0];
-            const middleMCP = lm[9]; 
+            const wrist = lm[0]; const middleMCP = lm[9]; 
             const palmSize = Math.hypot(middleMCP.x - wrist.x, middleMCP.y - wrist.y);
             const dIndex = Math.hypot(lm[8].x - wrist.x, lm[8].y - wrist.y);
             const dMiddle = Math.hypot(lm[12].x - wrist.x, lm[12].y - wrist.y);
@@ -292,8 +279,7 @@
             const ratio = avgTipDist / palmSize;
             
             let openFactor = (ratio - 1.2) / (2.2 - 1.2);
-            openFactor = Math.max(0, Math.min(1, openFactor));
-            state.targetFactor = openFactor;
+            state.targetFactor = Math.max(0, Math.min(1, openFactor));
 
             const p4 = lm[4]; const p8 = lm[8];
             const dist = Math.hypot(p4.x - p8.x, p4.y - p8.y);
@@ -302,7 +288,6 @@
             } else { 
                  state.isPinch = false; 
             }
-
         } else {
             state.isHandDetected = false;
             state.isPinch = false;
@@ -318,17 +303,15 @@
 
 
     // ==========================================
-    // 3. 渲染循环 (修改了捏合逻辑)
+    // 3. 渲染循环 (修复了灵敏度)
     // ==========================================
 
     function animate() {
         requestAnimationFrame(animate);
 
         const time = Date.now() * 0.003; 
-
         const smoothSpeed = 0.03; 
         state.scatterFactor += (state.targetFactor - state.scatterFactor) * smoothSpeed;
-
         const t = state.scatterFactor;
         const explosionProgress = 1 - Math.pow(1 - t, 3);
         const maxGravityDrop = 200;
@@ -338,14 +321,12 @@
         const colAttr = geometry.attributes.color;
         
         for (let i = 0; i < particleCount; i++) {
-            const ix = i * 3; const iy = i * 3 + 1; const iz = i * 3 + 2;
+            const ix = i*3; const iy = i*3+1; const iz = i*3+2;
             const ox = initialPositions[ix]; const oy = initialPositions[iy]; const oz = initialPositions[iz];
             const dx = scatterDirs[ix]; const dy = scatterDirs[iy]; const dz = scatterDirs[iz];
-
             posAttr.array[ix] = ox + dx * explosionProgress;
             posAttr.array[iz] = oz + dz * explosionProgress;
             posAttr.array[iy] = oy + dy * explosionProgress - gravityDrop;
-
             const blinkVal = 0.6 + 0.6 * Math.sin(time * blinkSpeeds[i] + blinkOffsets[i]);
             colAttr.array[ix] = Math.min(1, originalColors[ix] * blinkVal);
             colAttr.array[iy] = Math.min(1, originalColors[iy] * blinkVal);
@@ -360,41 +341,51 @@
         topStar.material.opacity = 1 - state.scatterFactor;
         starGlow.material.opacity = 0.8 * (1 - state.scatterFactor);
 
-        // 树的旋转逻辑
         if (state.scatterFactor < 0.8) {
             if (state.isHandDetected) {
-                // 手在的时候，树跟着手转
                 const targetRot = -state.handRotation * 1.5; 
                 treeGroup.rotation.y += (targetRot - treeGroup.rotation.y) * 0.05;
+
+                // --- 修复部分：更灵敏的照片切换计算 ---
+                // 人的手腕舒适旋转区大约是 -1.5 (左倾) 到 1.5 (右倾)
+                // 我们把这个范围映射到 0 到 1
+                // 偏移值 0.5 是为了让“直立手”对应中间的图片(或起始点)
+                // 我这里设置为线性分布
+                
+                let rawRot = state.handRotation; // 约 -PI 到 PI
+                // 限制在 -1.5 到 1.5 之间 (约 +/- 90度)
+                let clampedRot = Math.max(-1.5, Math.min(1.5, rawRot));
+                // 映射到 0 ~ 1
+                let norm = (clampedRot + 1.5) / 3.0; 
+                
+                // 计算索引 (0 到 4)
+                let newIndex = Math.floor(norm * photoGallery.length);
+                newIndex = Math.max(0, Math.min(photoGallery.length - 1, newIndex));
+                
+                currentPhotoIndex = newIndex;
+                
+                // 更新屏幕文字提示
+                indicatorElement.innerText = `Photo: ${currentPhotoIndex + 1} / 5`;
+                indicatorElement.style.opacity = 1;
+
             } else {
-                // 手不在的时候，自动慢速旋转
                 treeGroup.rotation.y += 0.002;
+                indicatorElement.innerText = "Detecting Hand...";
+                indicatorElement.style.opacity = 0.6;
             }
         }
 
-        // --- 修改点：捏合触发照片逻辑 ---
         if (state.isPinch && state.isHandDetected) {
-            // 1. 计算当前应该显示哪张照片
-            // 将旋转角度 (-PI 到 PI) 归一化到 0 到 1 之间
-            let normalizedRotation = (state.handRotation + Math.PI) / (2 * Math.PI);
-            // 将 0-1 映射到 0-4 的索引 (总共5张照片)
-            let photoIndex = Math.floor(normalizedRotation * photoGallery.length);
-            // 确保索引不越界
-            photoIndex = Math.max(0, Math.min(photoGallery.length - 1, photoIndex));
-
-            // 2. 如果当前显示的照片不是应该显示的那张，就切换源
-            if (cardImageElement.src !== photoGallery[photoIndex]) {
-                cardImageElement.src = photoGallery[photoIndex];
+            // 只有在 pinch 时才更新图片源，节省性能
+            if (cardImageElement.src !== photoGallery[currentPhotoIndex]) {
+                cardImageElement.src = photoGallery[currentPhotoIndex];
             }
-            
-            // 3. 显示弹窗
             photoOverlay.classList.add('active');
         } else {
             photoOverlay.classList.remove('active');
         }
 
         topStar.rotation.y += 0.02;
-
         renderer.render(scene, camera);
     }
 
