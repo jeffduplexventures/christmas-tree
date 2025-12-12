@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Duplex Ventures Christmas</title>
+    <title>Duplex Ventures Christmas (Ultra Shiny)</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Lato', sans-serif; }
@@ -15,56 +15,49 @@
             display: flex; flex-direction: column; align-items: center; padding-top: 5vh;
         }
         
-        /* 标题样式 */
         h1 {
             color: #fff; font-family: 'Cinzel', serif; 
-            font-size: 26px; 
-            line-height: 1.4;
-            letter-spacing: 2px;
-            text-align: center;
+            font-size: 26px; line-height: 1.4; letter-spacing: 2px; text-align: center;
             margin: 0; 
-            text-shadow: 0 0 15px rgba(255, 215, 0, 0.8); opacity: 1;
+            /* 增强了标题的发光效果 */
+            text-shadow: 0 0 20px rgba(255, 215, 0, 1), 0 0 40px rgba(255, 215, 0, 0.5); 
+            opacity: 1;
             animation: glow 2s ease-in-out infinite alternate;
         }
 
         @keyframes glow {
-            from { text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-            to { text-shadow: 0 0 25px rgba(255, 215, 0, 1); }
+            from { text-shadow: 0 0 10px rgba(255, 215, 0, 0.6); }
+            to { text-shadow: 0 0 30px rgba(255, 215, 0, 1), 0 0 10px #fff; }
         }
 
-        /* 关键修改：兼容 iOS 的视频隐藏方式 */
-        .input_video { 
-            position: absolute; 
-            top: 0; left: 0; 
-            width: 1px; height: 1px; 
-            opacity: 0; 
-            pointer-events: none; 
-        }
+        .input_video { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
         
         #loading {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             color: #d4af37; font-family: 'Cinzel', serif; z-index: 20;
             text-align: center; width: 100%;
+            text-shadow: 0 0 10px #d4af37;
         }
 
         .instruction {
             position: absolute; bottom: 30px; width: 100%; text-align: center;
-            color: rgba(255, 255, 255, 0.6); font-size: 14px; letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.8); font-size: 14px; letter-spacing: 1px;
             background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
             padding-bottom: 20px;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
         }
-        .instruction b { color: #ffd700; }
+        .instruction b { color: #ffd700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.5); }
 
-        /* 照片弹窗 */
         #photo-overlay {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%) scale(0.8);
             width: 300px; height: 400px;
             background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
-            border: 2px solid rgba(212, 175, 55, 0.6); border-radius: 15px;
+            border: 2px solid rgba(255, 215, 0, 0.8); border-radius: 15px;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.4);
             display: flex; justify-content: center; align-items: center;
             opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 100; box-shadow: 0 0 40px rgba(0,0,0,0.8); pointer-events: none;
+            z-index: 100; pointer-events: none;
         }
         #photo-overlay.active { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         #photo-overlay img { width: 95%; height: 95%; object-fit: contain; border-radius: 10px; }
@@ -78,225 +71,147 @@
 </head>
 <body>
 
-    <div id="loading">✨ Lighting up the stars...<br><span style="font-size:12px; opacity:0.7">Please allow camera access</span></div>
+    <div id="loading">✨ Igniting Lights...<br><span style="font-size:12px; opacity:0.7">Please allow camera access</span></div>
 
     <div id="ui-layer">
-        <h1>
-            Duplex Ventures<br>
-            Wish You A<br>
-            Merry Christmas
-        </h1>
-        
-        <div id="photo-overlay">
-            <img id="card-image" src="" alt="Merry Christmas Card">
-        </div>
-
+        <h1>Duplex Ventures<br>Wish You A<br>Merry Christmas</h1>
+        <div id="photo-overlay"><img id="card-image" src="" alt="Card"></div>
         <div class="instruction">
-            🖐 <b>Open Hand</b>: Fireworks &nbsp;|&nbsp; 
-            ✊ <b>Fist</b>: Tree Mode <br>
+            🖐 <b>Open Hand</b>: Fireworks &nbsp;|&nbsp; ✊ <b>Fist</b>: Tree Mode <br>
             👋 <b>Wave</b>: Rotate &nbsp;|&nbsp; 👌 <b>Pinch</b>: View Card
         </div>
     </div>
 
     <video class="input_video" playsinline webkit-playsinline muted autoplay></video>
-    
     <div id="canvas-container"></div>
 
 <script>
-    // ==========================================
-    // 0. 自动生成贺卡图片 (更新了文字排版)
-    // ==========================================
+    // 0. 生成贺卡 (保持不变)
     function generateChristmasCard() {
-        const cvs = document.createElement('canvas');
-        cvs.width = 600; cvs.height = 800;
+        const cvs = document.createElement('canvas'); cvs.width = 600; cvs.height = 800;
         const ctx = cvs.getContext('2d');
-
-        // 1. 深红背景
-        const grad = ctx.createLinearGradient(0,0,0,800);
-        grad.addColorStop(0, '#8B0000');
-        grad.addColorStop(1, '#300000');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 600, 800);
-
-        // 2. 金色边框
-        ctx.strokeStyle = '#D4AF37';
-        ctx.lineWidth = 15;
-        ctx.strokeRect(20, 20, 560, 760);
-        ctx.lineWidth = 2;
-        ctx.strokeRect(35, 35, 530, 730);
-
-        // 3. 文字设置
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.shadowColor = 'rgba(0,0,0,0.5)';
-        ctx.shadowBlur = 10;
-
-        // --- Line 1: Duplex Ventures ---
-        ctx.fillStyle = '#D4AF37'; 
-        ctx.font = 'bold 55px serif'; 
-        ctx.fillText('Duplex Ventures', 300, 260);
-
-        // --- Line 2: Wish You A ---
-        ctx.fillStyle = '#FFF'; 
-        ctx.font = 'italic 40px serif';
-        ctx.fillText('Wish You A', 300, 340);
-        
-        // --- Line 3: Merry Christmas ---
-        ctx.fillStyle = '#D4AF37'; 
-        ctx.font = 'bold 65px serif';
-        ctx.fillText('Merry Christmas', 300, 440);
-
-        // 4. 装饰星星
-        ctx.fillStyle = '#FFF';
-        ctx.font = '40px serif';
-        ctx.fillText('★', 300, 160);
-        ctx.fillText('★', 300, 560);
-        
+        const grad = ctx.createLinearGradient(0,0,0,800); grad.addColorStop(0, '#8B0000'); grad.addColorStop(1, '#300000');
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, 600, 800);
+        ctx.strokeStyle = '#D4AF37'; ctx.lineWidth = 15; ctx.strokeRect(20, 20, 560, 760); ctx.lineWidth = 2; ctx.strokeRect(35, 35, 530, 730);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 10;
+        ctx.fillStyle = '#D4AF37'; ctx.font = 'bold 55px serif'; ctx.fillText('Duplex Ventures', 300, 260);
+        ctx.fillStyle = '#FFF'; ctx.font = 'italic 40px serif'; ctx.fillText('Wish You A', 300, 340);
+        ctx.fillStyle = '#D4AF37'; ctx.font = 'bold 65px serif'; ctx.fillText('Merry Christmas', 300, 440);
+        ctx.fillStyle = '#FFF'; ctx.font = '40px serif'; ctx.fillText('★', 300, 160); ctx.fillText('★', 300, 560);
         return cvs.toDataURL();
     }
     document.getElementById('card-image').src = generateChristmasCard();
 
-
     // ==========================================
-    // 1. THREE.JS 场景
+    // 1. THREE.JS 场景 (超级闪亮版)
     // ==========================================
-    
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x020202); 
-    scene.fog = new THREE.FogExp2(0x020202, 0.001);
+    scene.background = new THREE.Color(0x000000); // 纯黑背景对比度更高
+    scene.fog = new THREE.FogExp2(0x000000, 0.0005); // 雾气减少，让远处也亮
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 3000);
-    camera.position.set(0, 150, 450); 
-    camera.lookAt(0, 120, 0);
-
+    camera.position.set(0, 150, 450); camera.lookAt(0, 120, 0);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    function createGlowTexture() {
-        const size = 64;
-        const canvas = document.createElement('canvas');
-        canvas.width = size; canvas.height = size;
-        const ctx = canvas.getContext('2d');
-        const c = size / 2;
+    // --- 核心修改：更亮的光晕贴图 ---
+    function createSuperGlowTexture() {
+        const size = 64; const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d'); const c = size / 2;
+        // 使用更激进的径向渐变
         const g = ctx.createRadialGradient(c, c, 0, c, c, c);
-        g.addColorStop(0, 'rgba(255,255,255,1)');
-        g.addColorStop(0.2, 'rgba(255,255,255,0.8)'); 
-        g.addColorStop(0.5, 'rgba(255,255,255,0.2)');
-        g.addColorStop(1, 'rgba(255,255,255,0)');
+        g.addColorStop(0, 'rgba(255, 255, 255, 1)');   // 中心纯白 (最亮)
+        g.addColorStop(0.15, 'rgba(255, 240, 200, 0.9)'); // 核心光圈
+        g.addColorStop(0.4, 'rgba(255, 215, 0, 0.3)'); // 金色外圈
+        g.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c, c, c, 0, 2 * Math.PI); ctx.fill();
         return new THREE.Texture(canvas);
     }
-    const particleTexture = createGlowTexture();
+    const particleTexture = createSuperGlowTexture();
     particleTexture.needsUpdate = true;
 
-    // --- 构建树 (手机优化) ---
-    const treeGroup = new THREE.Group(); 
-    treeGroup.position.y = 120;
-    scene.add(treeGroup);
+    const treeGroup = new THREE.Group(); treeGroup.position.y = 120; scene.add(treeGroup);
     
-    // 如果屏幕宽度小于768px(手机)，只用6000个粒子，否则用12000个
+    // 粒子数量适中，靠亮度取胜
     const isMobile = window.innerWidth < 768;
-    const particleCount = isMobile ? 6000 : 12000; 
-
-    const treeHeight = 280;
-    const baseRadius = 110;
+    const particleCount = isMobile ? 6000 : 13000; 
+    const treeHeight = 280; const baseRadius = 110;
     
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
     const initialPositions = new Float32Array(particleCount * 3);
     const scatterDirs = new Float32Array(particleCount * 3);
-    const originalColors = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
     const blinkOffsets = new Float32Array(particleCount);
     const blinkSpeeds = new Float32Array(particleCount);
 
-    const colGold = new THREE.Color(0xffcc00);
-    const colWhite = new THREE.Color(0xffffee);
-    const colRed = new THREE.Color(0xff0033);
+    // 颜色更偏向高亮
+    const colGold = new THREE.Color(0xffdd00); // 更亮的金
+    const colWhite = new THREE.Color(0xffffff); // 纯白
+    const colRed = new THREE.Color(0xff3333);   // 亮红
 
     for (let i = 0; i < particleCount; i++) {
         const hRatio = Math.pow(Math.random(), 0.8);
         const y = (hRatio - 0.5) * treeHeight;
-        let r = baseRadius * (1 - hRatio) + (Math.random() - 0.5) * 20;
-        r = Math.max(0, r);
+        let r = baseRadius * (1 - hRatio) + (Math.random() - 0.5) * 20; r = Math.max(0, r);
         const theta = Math.random() * Math.PI * 2;
-        const x = r * Math.cos(theta);
-        const z = r * Math.sin(theta);
+        const x = r * Math.cos(theta); const z = r * Math.sin(theta);
 
-        initialPositions[i*3] = x;
-        initialPositions[i*3+1] = y;
-        initialPositions[i*3+2] = z;
-        positions[i*3] = x;
-        positions[i*3+1] = y;
-        positions[i*3+2] = z;
+        initialPositions[i*3]=x; initialPositions[i*3+1]=y; initialPositions[i*3+2]=z;
+        positions[i*3]=x; positions[i*3+1]=y; positions[i*3+2]=z;
 
-        const centerX = 0; const centerY = 50; const centerZ = 0;
-        let dirX = x - centerX; let dirY = y - centerY; let dirZ = z - centerZ;
-        const len = Math.sqrt(dirX*dirX + dirY*dirY + dirZ*dirZ);
-        dirX /= len; dirY /= len; dirZ /= len;
+        const centerX=0; const centerY=50; const centerZ=0;
+        let dirX=x-centerX; let dirY=y-centerY; let dirZ=z-centerZ;
+        const len = Math.sqrt(dirX*dirX+dirY*dirY+dirZ*dirZ);
+        dirX/=len; dirY/=len; dirZ/=len;
         const speed = 100 + Math.random() * 250; 
-        scatterDirs[i*3] = dirX * speed;
-        scatterDirs[i*3+1] = dirY * speed;
-        scatterDirs[i*3+2] = dirZ * speed;
+        scatterDirs[i*3]=dirX*speed; scatterDirs[i*3+1]=dirY*speed; scatterDirs[i*3+2]=dirZ*speed;
 
-        let c;
-        const rand = Math.random();
-        if (rand > 0.85) c = colRed;
-        else if (rand > 0.50) c = colWhite;
-        else c = Math.random() > 0.5 ? colGold : new THREE.Color(0xffaa00);
+        let c; const rand = Math.random();
+        if (rand > 0.90) c = colWhite; // 增加白色闪光点的比例
+        else if (rand > 0.70) c = colRed;
+        else c = colGold;
         
-        originalColors[i*3] = c.r;
-        originalColors[i*3+1] = c.g;
-        originalColors[i*3+2] = c.b;
-        
-        colors[i*3] = c.r;
-        colors[i*3+1] = c.g;
-        colors[i*3+2] = c.b;
-
+        colors[i*3]=c.r; colors[i*3+1]=c.g; colors[i*3+2]=c.b;
         blinkOffsets[i] = Math.random() * Math.PI * 2;
-        blinkSpeeds[i] = 0.5 + Math.random() * 2.0;
+        blinkSpeeds[i] = 1.0 + Math.random() * 3.0; // 闪烁速度加快
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     
+    // --- 核心修改：使用更大的点和 AdditiveBlending ---
     const material = new THREE.PointsMaterial({
-        size: isMobile ? 4.5 : 3.5, // 手机上粒子稍微大一点点以弥补数量少
-        vertexColors: true, map: particleTexture,
-        blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 1
+        size: isMobile ? 6.0 : 4.5, // 粒子变大，光晕重叠更多
+        vertexColors: true, 
+        map: particleTexture,
+        blending: THREE.AdditiveBlending, // 关键：颜色叠加会让重叠处变成亮白
+        depthWrite: false, 
+        transparent: true, 
+        opacity: 0.9
     });
 
     const particles = new THREE.Points(geometry, material);
     treeGroup.add(particles);
 
-    const starGeo = new THREE.OctahedronGeometry(10, 0);
-    const starMat = new THREE.MeshBasicMaterial({ color: 0xffffee, wireframe: true, transparent: true });
-    const topStar = new THREE.Mesh(starGeo, starMat);
+    // 顶部星星 - 加强光效
+    const topStar = new THREE.Mesh(new THREE.OctahedronGeometry(12, 0), new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true }));
     const starOrigin = { x: 0, y: treeHeight/2 + 8, z: 0 };
     topStar.position.set(starOrigin.x, starOrigin.y, starOrigin.z);
     treeGroup.add(topStar);
     
-    const glowMat = new THREE.SpriteMaterial({ map: particleTexture, color: 0xffd700, transparent: true, blending: THREE.AdditiveBlending, opacity: 0.8 });
+    const glowMat = new THREE.SpriteMaterial({ map: particleTexture, color: 0xffffff, blending: THREE.AdditiveBlending, opacity: 1.0 });
     const starGlow = new THREE.Sprite(glowMat);
-    starGlow.scale.set(70, 70, 1);
+    starGlow.scale.set(100, 100, 1); // 加大光晕
     topStar.add(starGlow);
 
-
     // ==========================================
-    // 2. 逻辑控制
+    // 2. 逻辑 & 动画
     // ==========================================
-
-    let state = {
-        isHandDetected: false,
-        handRotation: 0,
-        isPinch: false,
-        scatterFactor: 0, 
-        targetFactor: 0
-    };
-
+    let state = { isHandDetected: false, handRotation: 0, isPinch: false, scatterFactor: 0, targetFactor: 0 };
     const photoOverlay = document.getElementById('photo-overlay');
     const videoElement = document.getElementsByClassName('input_video')[0];
     
@@ -305,118 +220,84 @@
     
     hands.onResults(results => {
         document.getElementById('loading').style.display = 'none';
-        
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
             state.isHandDetected = true;
             const lm = results.multiHandLandmarks[0];
-            
             const p5 = lm[5]; const p17 = lm[17];
             state.handRotation = Math.atan2(p17.y - p5.y, p17.x - p5.x);
-
-            const wrist = lm[0];
-            const middleMCP = lm[9]; 
-            const palmSize = Math.hypot(middleMCP.x - wrist.x, middleMCP.y - wrist.y);
-            const dIndex = Math.hypot(lm[8].x - wrist.x, lm[8].y - wrist.y);
-            const dMiddle = Math.hypot(lm[12].x - wrist.x, lm[12].y - wrist.y);
-            const dRing = Math.hypot(lm[16].x - wrist.x, lm[16].y - wrist.y);
-            const avgTipDist = (dIndex + dMiddle + dRing) / 3;
-            const ratio = avgTipDist / palmSize;
-            
-            let openFactor = (ratio - 1.2) / (2.2 - 1.2);
-            openFactor = Math.max(0, Math.min(1, openFactor));
-            state.targetFactor = openFactor;
-
-            const p4 = lm[4]; const p8 = lm[8];
-            const dist = Math.hypot(p4.x - p8.x, p4.y - p8.y);
-            if (dist < 0.05 * (palmSize * 10) && state.targetFactor > 0.3) { 
-                 state.isPinch = true; 
-            } else { 
-                 state.isPinch = false; 
-            }
-
+            const wrist = lm[0]; const middleMCP = lm[9]; const palmSize = Math.hypot(middleMCP.x - wrist.x, middleMCP.y - wrist.y);
+            const avgTipDist = (Math.hypot(lm[8].x-wrist.x, lm[8].y-wrist.y) + Math.hypot(lm[12].x-wrist.x, lm[12].y-wrist.y) + Math.hypot(lm[16].x-wrist.x, lm[16].y-wrist.y)) / 3;
+            state.targetFactor = Math.max(0, Math.min(1, (avgTipDist / palmSize - 1.2) / 1.0));
+            const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
+            state.isPinch = (pinchDist < 0.05 * (palmSize * 10) && state.targetFactor > 0.3);
         } else {
-            state.isHandDetected = false;
-            state.isPinch = false;
-            state.targetFactor = 0; 
+            state.isHandDetected = false; state.isPinch = false; state.targetFactor = 0;
         }
     });
-
-    const cameraUtils = new Camera(videoElement, {
-        onFrame: async () => { await hands.send({image: videoElement}); },
-        width: 640, height: 480
-    });
+    const cameraUtils = new Camera(videoElement, { onFrame: async () => { await hands.send({image: videoElement}); }, width: 640, height: 480 });
     cameraUtils.start();
-
-
-    // ==========================================
-    // 3. 渲染循环
-    // ==========================================
 
     function animate() {
         requestAnimationFrame(animate);
-
         const time = Date.now() * 0.003; 
-
-        const smoothSpeed = 0.03; 
-        state.scatterFactor += (state.targetFactor - state.scatterFactor) * smoothSpeed;
+        state.scatterFactor += (state.targetFactor - state.scatterFactor) * 0.03;
 
         const t = state.scatterFactor;
         const explosionProgress = 1 - Math.pow(1 - t, 3);
-        const maxGravityDrop = 200;
-        const gravityDrop = maxGravityDrop * t * t;
+        const gravityDrop = 200 * t * t;
 
         const posAttr = geometry.attributes.position;
         const colAttr = geometry.attributes.color;
         
         for (let i = 0; i < particleCount; i++) {
-            const ix = i * 3;
-            const iy = i * 3 + 1;
-            const iz = i * 3 + 2;
-
-            const ox = initialPositions[ix];
-            const oy = initialPositions[iy];
-            const oz = initialPositions[iz];
-            const dx = scatterDirs[ix];
-            const dy = scatterDirs[iy];
-            const dz = scatterDirs[iz];
-
-            posAttr.array[ix] = ox + dx * explosionProgress;
-            posAttr.array[iz] = oz + dz * explosionProgress;
-            posAttr.array[iy] = oy + dy * explosionProgress - gravityDrop;
-
-            const blinkVal = 0.6 + 0.6 * Math.sin(time * blinkSpeeds[i] + blinkOffsets[i]);
+            const ix = i * 3; const iy = i * 3 + 1; const iz = i * 3 + 2;
+            const ox = initialPositions[ix]; const oy = initialPositions[iy]; const oz = initialPositions[iz];
             
-            colAttr.array[ix] = Math.min(1, originalColors[ix] * blinkVal);
-            colAttr.array[iy] = Math.min(1, originalColors[iy] * blinkVal);
-            colAttr.array[iz] = Math.min(1, originalColors[iz] * blinkVal);
+            posAttr.array[ix] = ox + scatterDirs[ix] * explosionProgress;
+            posAttr.array[iz] = oz + scatterDirs[iz] * explosionProgress;
+            posAttr.array[iy] = oy + scatterDirs[iy] * explosionProgress - gravityDrop;
+
+            // --- 核心修改：钻石闪烁算法 ---
+            // 基础闪烁 + 随机爆闪
+            let baseBlink = 0.5 + 0.5 * Math.sin(time * blinkSpeeds[i] + blinkOffsets[i]);
+            
+            // 每隔几秒，有 5% 的粒子会变得超级亮 (模拟灯光频闪)
+            if (i % 20 === 0 && Math.sin(time * 5 + i) > 0.95) {
+                baseBlink = 2.0; // 超亮！
+            }
+
+            // 张开手时，整体更亮
+            if (t > 0.1) baseBlink *= 1.5; 
+
+            // 赋值颜色，允许颜色值超过 1.0 (在 WebGL 中这会造成辉光效果)
+            colAttr.array[ix] = blinkOffsets[i] > 3 ? colWhite.r : colGold.r * baseBlink; 
+            colAttr.array[iy] = blinkOffsets[i] > 3 ? colWhite.g : colGold.g * baseBlink;
+            colAttr.array[iz] = blinkOffsets[i] > 3 ? colWhite.b : colGold.b * baseBlink;
         }
         
         posAttr.needsUpdate = true;
         colAttr.needsUpdate = true; 
 
+        // 顶部星星逻辑
         const starExplosionScale = 1.1;
-        topStar.position.x = starOrigin.x + (Math.random()-0.5) * 300 * explosionProgress * starExplosionScale;
-        topStar.position.y = starOrigin.y + (Math.random()) * 300 * explosionProgress * starExplosionScale - gravityDrop;
-        topStar.position.z = starOrigin.z + (Math.random()-0.5) * 300 * explosionProgress * starExplosionScale;
+        topStar.position.x = starOrigin.x + (Math.random()-0.5) * 300 * explosionProgress;
+        topStar.position.y = starOrigin.y + (Math.random()) * 300 * explosionProgress - gravityDrop;
+        topStar.position.z = starOrigin.z + (Math.random()-0.5) * 300 * explosionProgress;
         topStar.material.opacity = 1 - state.scatterFactor;
         starGlow.material.opacity = 0.8 * (1 - state.scatterFactor);
+        topStar.rotation.y += 0.05; // 转快点
 
+        // 整体旋转
         if (state.scatterFactor < 0.8) {
             if (state.isHandDetected) {
-                const targetRot = -state.handRotation * 1.5; 
-                treeGroup.rotation.y += (targetRot - treeGroup.rotation.y) * 0.05;
+                treeGroup.rotation.y += (-state.handRotation * 1.5 - treeGroup.rotation.y) * 0.05;
             } else {
-                treeGroup.rotation.y += 0.002;
+                treeGroup.rotation.y += 0.003;
             }
         }
 
-        if (state.isPinch && state.isHandDetected) {
-            photoOverlay.classList.add('active');
-        } else {
-            photoOverlay.classList.remove('active');
-        }
-
-        topStar.rotation.y += 0.02;
+        if (state.isPinch && state.isHandDetected) photoOverlay.classList.add('active');
+        else photoOverlay.classList.remove('active');
 
         renderer.render(scene, camera);
     }
@@ -428,7 +309,6 @@
     });
 
     animate();
-
 </script>
 </body>
 </html>
