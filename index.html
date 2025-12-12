@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Duplex Ventures Christmas (Colorful Shiny)</title>
+    <title>Duplex Ventures Christmas (Ultimate)</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Lato', sans-serif; }
@@ -23,10 +23,26 @@
             opacity: 1;
             animation: glow 2s ease-in-out infinite alternate;
         }
-
         @keyframes glow {
-            from { text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 0 20px rgba(0, 255, 0, 0.3); }
-            to { text-shadow: 0 0 30px rgba(255, 215, 0, 1), 0 0 20px rgba(255, 0, 0, 0.8), 0 0 10px #fff; }
+            from { text-shadow: 0 0 10px rgba(255, 215, 0, 0.6); }
+            to { text-shadow: 0 0 30px rgba(255, 215, 0, 1), 0 0 10px #fff; }
+        }
+
+        /* 状态提示栏 */
+        #status-bar {
+            margin-top: 15px;
+            color: #00ffcc;
+            font-size: 16px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 255, 204, 0.5);
+            opacity: 0;
+            transition: opacity 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px #00ffcc;
         }
 
         .input_video { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
@@ -40,12 +56,12 @@
 
         .instruction {
             position: absolute; bottom: 30px; width: 100%; text-align: center;
-            color: rgba(255, 255, 255, 0.8); font-size: 14px; letter-spacing: 1px;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-            padding-bottom: 20px;
-            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            color: rgba(255, 255, 255, 0.9); font-size: 13px; letter-spacing: 0.5px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding-bottom: 25px; line-height: 1.8;
+            text-shadow: 0 0 2px black;
         }
-        .instruction b { color: #ffd700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.5); }
+        .instruction b { color: #ffd700; text-shadow: 0 0 5px rgba(255, 215, 0, 0.6); }
 
         #photo-overlay {
             position: absolute; top: 50%; left: 50%;
@@ -70,13 +86,14 @@
 </head>
 <body>
 
-    <div id="loading">✨ Decorating Tree...<br><span style="font-size:12px; opacity:0.7">Please allow camera access</span></div>
+    <div id="loading">✨ Loading Magic...<br><span style="font-size:12px; opacity:0.7">Allow Camera Access</span></div>
 
     <div id="ui-layer">
         <h1>Duplex Ventures<br>Wish You A<br>Merry Christmas</h1>
+        <div id="status-bar">Detecting...</div>
         <div id="photo-overlay"><img id="card-image" src="" alt="Card"></div>
         <div class="instruction">
-            🖐 <b>Open Hand</b>: Fireworks &nbsp;|&nbsp; ✊ <b>Fist</b>: Tree Mode <br>
+            🖐 <b>Open</b>: Fireworks &nbsp;|&nbsp; ✌️ <b>Peace</b>: Snow &nbsp;|&nbsp; 👍 <b>Thumb</b>: Rainbow<br>
             👋 <b>Wave</b>: Rotate &nbsp;|&nbsp; 👌 <b>Pinch</b>: View Card
         </div>
     </div>
@@ -85,7 +102,7 @@
     <div id="canvas-container"></div>
 
 <script>
-    // 0. 生成贺卡 (保持不变)
+    // 0. 生成贺卡
     function generateChristmasCard() {
         const cvs = document.createElement('canvas'); cvs.width = 600; cvs.height = 800;
         const ctx = cvs.getContext('2d');
@@ -102,7 +119,7 @@
     document.getElementById('card-image').src = generateChristmasCard();
 
     // ==========================================
-    // 1. THREE.JS 场景 (多彩圣诞版)
+    // 1. THREE.JS 场景
     // ==========================================
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
@@ -116,13 +133,13 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    // --- 发光贴图 (中心极亮) ---
+    // 光晕贴图
     function createSuperGlowTexture() {
         const size = 64; const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
         const ctx = canvas.getContext('2d'); const c = size / 2;
         const g = ctx.createRadialGradient(c, c, 0, c, c, c);
-        g.addColorStop(0, 'rgba(255, 255, 255, 1)');   // 中心纯白
-        g.addColorStop(0.3, 'rgba(255, 255, 255, 0.4)'); // 中间过渡
+        g.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        g.addColorStop(0.3, 'rgba(255, 255, 255, 0.4)');
         g.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c, c, c, 0, 2 * Math.PI); ctx.fill();
         return new THREE.Texture(canvas);
@@ -130,27 +147,26 @@
     const particleTexture = createSuperGlowTexture();
     particleTexture.needsUpdate = true;
 
+    // --- 树 ---
     const treeGroup = new THREE.Group(); treeGroup.position.y = 120; scene.add(treeGroup);
     
     const isMobile = window.innerWidth < 768;
-    const particleCount = isMobile ? 7000 : 13000; // 稍微增加一点粒子数让颜色更丰富
+    const particleCount = isMobile ? 7000 : 13000; 
     const treeHeight = 280; const baseRadius = 110;
     
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
     const initialPositions = new Float32Array(particleCount * 3);
     const scatterDirs = new Float32Array(particleCount * 3);
-    // 新增：存储原始颜色的数组，用于闪烁计算
     const originalColors = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
     const blinkOffsets = new Float32Array(particleCount);
     const blinkSpeeds = new Float32Array(particleCount);
 
-    // --- 核心修改：圣诞配色 ---
-    const colGreen = new THREE.Color(0x00ff44); // 青绿色 (主体)
-    const colRed = new THREE.Color(0xff0000);   // 圣诞红 (装饰)
-    const colGold = new THREE.Color(0xffd700);  // 金色 (灯光)
-    const colWhite = new THREE.Color(0xffffff); // 白色 (闪光)
+    const colGreen = new THREE.Color(0x00ff44);
+    const colRed = new THREE.Color(0xff0000);
+    const colGold = new THREE.Color(0xffd700);
+    const colWhite = new THREE.Color(0xffffff);
 
     for (let i = 0; i < particleCount; i++) {
         const hRatio = Math.pow(Math.random(), 0.8);
@@ -169,21 +185,10 @@
         const speed = 100 + Math.random() * 250; 
         scatterDirs[i*3]=dirX*speed; scatterDirs[i*3+1]=dirY*speed; scatterDirs[i*3+2]=dirZ*speed;
 
-        // --- 核心修改：颜色分布逻辑 ---
         let c; const rand = Math.random();
-        if (rand < 0.60) {
-            c = colGreen; // 60% 绿色主体
-        } else if (rand < 0.80) {
-            c = colRed;   // 20% 红色装饰
-        } else if (rand < 0.95) {
-            c = colGold;  // 15% 金色灯光
-        } else {
-            c = colWhite; // 5% 白色爆闪
-        }
+        if (rand < 0.60) c = colGreen; else if (rand < 0.80) c = colRed; else if (rand < 0.95) c = colGold; else c = colWhite;
         
-        // 存储原始颜色
         originalColors[i*3]=c.r; originalColors[i*3+1]=c.g; originalColors[i*3+2]=c.b;
-        // 初始化当前颜色
         colors[i*3]=c.r; colors[i*3+1]=c.g; colors[i*3+2]=c.b;
 
         blinkOffsets[i] = Math.random() * Math.PI * 2;
@@ -194,35 +199,60 @@
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     
     const material = new THREE.PointsMaterial({
-        size: isMobile ? 5.5 : 4.5,
-        vertexColors: true, 
-        map: particleTexture,
-        blending: THREE.AdditiveBlending, 
-        depthWrite: false, 
-        transparent: true, 
-        opacity: 0.9
+        size: isMobile ? 5.5 : 4.5, vertexColors: true, map: particleTexture,
+        blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.9
     });
 
     const particles = new THREE.Points(geometry, material);
     treeGroup.add(particles);
 
-    // 顶部星星 - 保持金色高亮
+    // 顶部星星
     const topStar = new THREE.Mesh(new THREE.OctahedronGeometry(12, 0), new THREE.MeshBasicMaterial({ color: 0xffd700, wireframe: true }));
     const starOrigin = { x: 0, y: treeHeight/2 + 8, z: 0 };
     topStar.position.set(starOrigin.x, starOrigin.y, starOrigin.z);
     treeGroup.add(topStar);
-    
     const glowMat = new THREE.SpriteMaterial({ map: particleTexture, color: 0xffd700, blending: THREE.AdditiveBlending, opacity: 1.0 });
-    const starGlow = new THREE.Sprite(glowMat);
-    starGlow.scale.set(100, 100, 1);
-    topStar.add(starGlow);
+    const starGlow = new THREE.Sprite(glowMat); starGlow.scale.set(100, 100, 1); topStar.add(starGlow);
+
+    // ==========================================
+    // 新增：雪花系统 (Snow System)
+    // ==========================================
+    const snowCount = 1000;
+    const snowGeo = new THREE.BufferGeometry();
+    const snowPos = new Float32Array(snowCount * 3);
+    const snowVel = new Float32Array(snowCount); // 下落速度
+
+    for(let i=0; i<snowCount; i++) {
+        snowPos[i*3] = (Math.random() - 0.5) * 800; // x
+        snowPos[i*3+1] = Math.random() * 600 + 200; // y (高空)
+        snowPos[i*3+2] = (Math.random() - 0.5) * 600; // z
+        snowVel[i] = 1 + Math.random() * 3; // 速度
+    }
+    snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
+    const snowMat = new THREE.PointsMaterial({
+        color: 0xffffff, size: 6, map: particleTexture, transparent: true, opacity: 0.8,
+        blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const snowSystem = new THREE.Points(snowGeo, snowMat);
+    scene.add(snowSystem);
+    snowSystem.visible = false; // 默认关闭
 
     // ==========================================
     // 2. 逻辑 & 动画
     // ==========================================
-    let state = { isHandDetected: false, handRotation: 0, isPinch: false, scatterFactor: 0, targetFactor: 0 };
+    let state = { 
+        isHandDetected: false, 
+        handRotation: 0, 
+        isPinch: false, 
+        scatterFactor: 0, 
+        targetFactor: 0,
+        // 新增手势状态
+        isPeaceSign: false, // 剪刀手
+        isThumbsUp: false   // 竖大拇指
+    };
     const photoOverlay = document.getElementById('photo-overlay');
     const videoElement = document.getElementsByClassName('input_video')[0];
+    const statusBar = document.getElementById('status-bar');
     
     const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
     hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
@@ -234,13 +264,35 @@
             const lm = results.multiHandLandmarks[0];
             const p5 = lm[5]; const p17 = lm[17];
             state.handRotation = Math.atan2(p17.y - p5.y, p17.x - p5.x);
+            
+            // 计算张开程度
             const wrist = lm[0]; const middleMCP = lm[9]; const palmSize = Math.hypot(middleMCP.x - wrist.x, middleMCP.y - wrist.y);
-            const avgTipDist = (Math.hypot(lm[8].x-wrist.x, lm[8].y-wrist.y) + Math.hypot(lm[12].x-wrist.x, lm[12].y-wrist.y) + Math.hypot(lm[16].x-wrist.x, lm[16].y-wrist.y)) / 3;
-            state.targetFactor = Math.max(0, Math.min(1, (avgTipDist / palmSize - 1.2) / 1.0));
+            const tipsAvg = (Math.hypot(lm[8].x-wrist.x, lm[8].y-wrist.y) + Math.hypot(lm[12].x-wrist.x, lm[12].y-wrist.y) + Math.hypot(lm[16].x-wrist.x, lm[16].y-wrist.y)) / 3;
+            state.targetFactor = Math.max(0, Math.min(1, (tipsAvg / palmSize - 1.2) / 1.0));
+
+            // Pinch (捏合)
             const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
             state.isPinch = (pinchDist < 0.05 * (palmSize * 10) && state.targetFactor > 0.3);
+
+            // --- 新增手势识别逻辑 ---
+            
+            // 1. 剪刀手 (Peace Sign): 食指和中指伸直，无名指和小指弯曲
+            // 简单判断：食指尖和中指尖 远离手腕，无名指尖和小指尖 靠近手腕
+            const iTip = Math.hypot(lm[8].x - wrist.x, lm[8].y - wrist.y);
+            const mTip = Math.hypot(lm[12].x - wrist.x, lm[12].y - wrist.y);
+            const rTip = Math.hypot(lm[16].x - wrist.x, lm[16].y - wrist.y);
+            const pTip = Math.hypot(lm[20].x - wrist.x, lm[20].y - wrist.y);
+            state.isPeaceSign = (iTip > palmSize * 1.8 && mTip > palmSize * 1.8 && rTip < palmSize * 1.5 && pTip < palmSize * 1.5);
+
+            // 2. 竖大拇指 (Thumbs Up): 大拇指伸直，其他四指弯曲
+            // 简单判断：大拇指尖远离掌心，食指尖靠近掌心
+            const tTipDist = Math.hypot(lm[4].x - lm[9].x, lm[4].y - lm[9].y); // 拇指到中指根部
+            const iTipDist = Math.hypot(lm[8].x - lm[0].x, lm[8].y - lm[0].y); // 食指到手腕
+            state.isThumbsUp = (tTipDist > palmSize && iTipDist < palmSize * 1.5);
+
         } else {
             state.isHandDetected = false; state.isPinch = false; state.targetFactor = 0;
+            state.isPeaceSign = false; state.isThumbsUp = false;
         }
     });
     const cameraUtils = new Camera(videoElement, { onFrame: async () => { await hands.send({image: videoElement}); }, width: 640, height: 480 });
@@ -258,6 +310,19 @@
         const posAttr = geometry.attributes.position;
         const colAttr = geometry.attributes.color;
         
+        // --- 状态提示更新 ---
+        if (state.isHandDetected) {
+            statusBar.style.opacity = 1;
+            if (state.isPinch) statusBar.innerText = "OPENING CARD";
+            else if (state.isPeaceSign) statusBar.innerText = "❄️ SNOW MODE ❄️";
+            else if (state.isThumbsUp) statusBar.innerText = "🌈 RAINBOW MODE 🌈";
+            else if (t > 0.5) statusBar.innerText = "💥 FIREWORKS";
+            else statusBar.innerText = "TREE MODE";
+        } else {
+            statusBar.style.opacity = 0;
+        }
+
+        // --- 树粒子更新 ---
         for (let i = 0; i < particleCount; i++) {
             const ix = i * 3; const iy = i * 3 + 1; const iz = i * 3 + 2;
             const ox = initialPositions[ix]; const oy = initialPositions[iy]; const oz = initialPositions[iz];
@@ -266,33 +331,55 @@
             posAttr.array[iz] = oz + scatterDirs[iz] * explosionProgress;
             posAttr.array[iy] = oy + scatterDirs[iy] * explosionProgress - gravityDrop;
 
-            // --- 核心修改：多彩闪烁算法 ---
+            // 基础闪烁
             let baseBlink = 0.5 + 0.5 * Math.sin(time * blinkSpeeds[i] + blinkOffsets[i]);
-            
-            // 随机爆闪 (亮度翻倍)
-            if (i % 20 === 0 && Math.sin(time * 5 + i) > 0.95) {
-                baseBlink = 2.5; 
-            }
-
-            // 张开手时，整体更亮
+            if (i % 20 === 0 && Math.sin(time * 5 + i) > 0.95) baseBlink = 2.5; 
             if (t > 0.1) baseBlink *= 1.5; 
 
-            // 使用原始颜色乘以闪烁系数，保持红是红，绿是绿
-            colAttr.array[ix] = originalColors[ix] * baseBlink;
-            colAttr.array[iy] = originalColors[iy] * baseBlink;
-            colAttr.array[iz] = originalColors[iz] * baseBlink;
+            // --- 彩虹模式逻辑 (竖大拇指触发) ---
+            if (state.isThumbsUp) {
+                // 根据时间产生彩虹色
+                const hue = (time * 0.2 + i * 0.0001) % 1; 
+                const color = new THREE.Color().setHSL(hue, 1.0, 0.5);
+                colAttr.array[ix] = color.r * 1.5; // 稍微亮一点
+                colAttr.array[iy] = color.g * 1.5;
+                colAttr.array[iz] = color.b * 1.5;
+            } else {
+                // 恢复圣诞配色
+                colAttr.array[ix] = originalColors[ix] * baseBlink;
+                colAttr.array[iy] = originalColors[iy] * baseBlink;
+                colAttr.array[iz] = originalColors[iz] * baseBlink;
+            }
         }
-        
         posAttr.needsUpdate = true;
         colAttr.needsUpdate = true; 
 
-        // 顶部星星逻辑
+        // --- 雪花系统更新 (剪刀手触发) ---
+        if (state.isPeaceSign) {
+            snowSystem.visible = true;
+            const snowPositions = snowGeo.attributes.position.array;
+            for(let i=0; i<snowCount; i++) {
+                // 下落
+                snowPositions[i*3+1] -= snowVel[i];
+                // 飘动
+                snowPositions[i*3] += Math.sin(time + i) * 0.5;
+                // 循环重置
+                if (snowPositions[i*3+1] < -200) {
+                    snowPositions[i*3+1] = 600;
+                }
+            }
+            snowGeo.attributes.position.needsUpdate = true;
+        } else {
+            // 如果手势消失，雪花慢慢变淡消失(这里简单直接隐藏)
+            snowSystem.visible = false;
+        }
+
+        // 星星 & 旋转逻辑 (保持不变)
         topStar.position.y = starOrigin.y - gravityDrop;
         topStar.material.opacity = 1 - state.scatterFactor;
         starGlow.material.opacity = 1.0 * (1 - state.scatterFactor);
         topStar.rotation.y += 0.05;
 
-        // 整体旋转
         if (state.scatterFactor < 0.8) {
             if (state.isHandDetected) {
                 treeGroup.rotation.y += (-state.handRotation * 1.5 - treeGroup.rotation.y) * 0.05;
