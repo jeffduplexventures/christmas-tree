@@ -19,7 +19,7 @@
             color: #fff; font-family: 'Cinzel', serif; 
             font-size: 26px; line-height: 1.4; letter-spacing: 2px; text-align: center;
             margin: 0; 
-            text-shadow: 0 0 20px rgba(255, 215, 0, 1), 0 0 40px rgba(0, 200, 255, 0.5); 
+            text-shadow: 0 0 20px rgba(255, 215, 0, 1), 0 0 40px rgba(255, 0, 0, 0.5); 
             opacity: 1;
             animation: glow 2s ease-in-out infinite alternate;
         }
@@ -76,7 +76,7 @@
 </head>
 <body>
 
-    <div id="loading">✨ Creating Magic...<br><span style="font-size:12px; opacity:0.7">Allow Camera Access</span></div>
+    <div id="loading">✨ Decorating Tree...<br><span style="font-size:12px; opacity:0.7">Allow Camera Access</span></div>
 
     <div id="ui-layer">
         <h1>Duplex Ventures<br>Wish You A<br>Merry Christmas</h1>
@@ -84,8 +84,8 @@
         <div id="photo-overlay"><img id="card-image" src="" alt="Card"></div>
         <div class="instruction">
             🖐 <b>Open</b>: Fireworks &nbsp;|&nbsp; ✌️ <b>Peace</b>: Snow<br>
-            👍 <b>Thumb</b>: Rainbow &nbsp;|&nbsp; 🤙 <b>666</b>: Frozen<br>
-            ☝️ <b>Index</b>: Magic Trail &nbsp;|&nbsp; 👌 <b>Pinch</b>: Card
+            👍 <b>Thumb</b>: Rainbow &nbsp;|&nbsp; ☝️ <b>Index</b>: Magic Trail<br>
+            👋 <b>Wave</b>: Rotate &nbsp;|&nbsp; 👌 <b>Pinch</b>: Card
         </div>
     </div>
 
@@ -158,9 +158,6 @@
     const colRed = new THREE.Color(0xff0000);
     const colGold = new THREE.Color(0xffd700);
     const colWhite = new THREE.Color(0xffffff);
-    const iceBlue = new THREE.Color(0x00ffff);
-    const iceWhite = new THREE.Color(0xffffff);
-    const icePurple = new THREE.Color(0x8800ff);
 
     for (let i = 0; i < particleCount; i++) {
         const hRatio = Math.pow(Math.random(), 0.8);
@@ -201,52 +198,61 @@
     treeGroup.add(particles);
 
     // ==========================================
-    // 饰品系统 (修复版)
+    // 饰品系统 (Ornaments - Fixed Visibility)
     // ==========================================
     const ornamentGroup = new THREE.Group();
-    treeGroup.add(ornamentGroup); // 关键：确保加到树上
+    treeGroup.add(ornamentGroup); // 绑定在树上，跟随树旋转
 
     function createOrnamentTexture(colorHex) {
-        const size = 64; const cvs = document.createElement('canvas'); cvs.width = size; cvs.height = size;
+        const size = 128; // 更高清
+        const cvs = document.createElement('canvas'); cvs.width = size; cvs.height = size;
         const ctx = cvs.getContext('2d'); const c = size / 2;
-        const g = ctx.createRadialGradient(c - 10, c - 10, 2, c, c, 30);
-        g.addColorStop(0, '#ffffff'); g.addColorStop(0.2, colorHex); g.addColorStop(1, '#000000');
-        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c, c, 30, 0, Math.PI * 2); ctx.fill();
+        // 模拟 3D 球体的高光
+        const g = ctx.createRadialGradient(c - 20, c - 20, 5, c, c, 60);
+        g.addColorStop(0, '#ffffff'); // 强烈高光
+        g.addColorStop(0.3, colorHex); 
+        g.addColorStop(1, '#000000'); 
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c, c, 60, 0, Math.PI * 2); ctx.fill();
         return new THREE.Texture(cvs);
     }
     const texRed = createOrnamentTexture('#ff0033');
     const texGold = createOrnamentTexture('#ffd700');
-    const texBlue = createOrnamentTexture('#0066ff');
+    const texBlue = createOrnamentTexture('#0088ff');
+    texRed.needsUpdate = true; texGold.needsUpdate = true; texBlue.needsUpdate = true;
     
     const ornamentData = [];
-    const ornamentCount = 55;
+    const ornamentCount = 60;
 
     for (let i = 0; i < ornamentCount; i++) {
         const mat = new THREE.SpriteMaterial({ 
-            map: i % 3 === 0 ? texRed : (i % 3 === 1 ? texGold : texBlue), transparent: true 
+            map: i % 3 === 0 ? texRed : (i % 3 === 1 ? texGold : texBlue), 
+            transparent: true,
+            opacity: 1
         });
         const sprite = new THREE.Sprite(mat);
         
-        const hRatio = Math.random() * 0.9;
+        const hRatio = Math.random() * 0.85 + 0.05; // 避免顶部底部太密集
         const y = (hRatio - 0.5) * treeHeight;
-        const r = baseRadius * (1 - hRatio) + 5; 
+        // 关键：加 15 偏移量，确保挂在树的最外层，不被粒子遮挡
+        const r = baseRadius * (1 - hRatio) + 15; 
         const theta = Math.random() * Math.PI * 2;
         
         const x = r * Math.cos(theta); const z = r * Math.sin(theta);
         
         sprite.position.set(x, y, z);
-        const randomScale = 4 + Math.random() * 5; 
+        // 稍微调大一点，确保显眼
+        const randomScale = 8 + Math.random() * 6; 
         sprite.scale.set(randomScale, randomScale, 1); 
         
         ornamentGroup.add(sprite);
 
-        // 计算爆炸方向
+        // 计算爆炸方向 (从中心向外)
         const dirX = x; const dirY = y - 50; const dirZ = z;
         const len = Math.sqrt(dirX*dirX + dirY*dirY + dirZ*dirZ);
         ornamentData.push({
             sprite: sprite, 
             ox: x, oy: y, oz: z, 
-            dx: (dirX/len) * 300, dy: (dirY/len) * 300, dz: (dirZ/len) * 300
+            dx: (dirX/len) * 350, dy: (dirY/len) * 350, dz: (dirZ/len) * 350 // 炸得更远
         });
     }
 
@@ -259,9 +265,9 @@
     starGlow.scale.set(100, 100, 1); topStar.add(starGlow);
 
     // ==========================================
-    // 拖尾系统
+    // 拖尾系统 (Magic Trail)
     // ==========================================
-    const trailCount = 60;
+    const trailCount = 50;
     const trailGeo = new THREE.BufferGeometry();
     const trailPos = new Float32Array(trailCount * 3);
     const trailColors = new Float32Array(trailCount * 3); 
@@ -274,7 +280,7 @@
     trailGeo.setAttribute('color', new THREE.BufferAttribute(trailColors, 3));
     
     const trailMat = new THREE.PointsMaterial({
-        size: 10, vertexColors: true, map: particleTexture, 
+        size: 12, vertexColors: true, map: particleTexture, 
         transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false
     });
     const trailSystem = new THREE.Points(trailGeo, trailMat);
@@ -302,7 +308,7 @@
     // ==========================================
     let state = { 
         isHandDetected: false, handRotation: 0, isPinch: false, scatterFactor: 0, targetFactor: 0,
-        isPeaceSign: false, isThumbsUp: false, isFrozenMode: false,
+        isPeaceSign: false, isThumbsUp: false,
         handX: 0, handY: 0, handZ: 0 
     };
     const photoOverlay = document.getElementById('photo-overlay');
@@ -327,31 +333,25 @@
             const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
             state.isPinch = (pinchDist < 0.05 * (palmSize * 10) && state.targetFactor > 0.3);
 
-            // 映射坐标
+            // 坐标
             const screenX = (0.5 - lm[8].x) * 600; 
             const screenY = (0.5 - lm[8].y) * 450;
             state.handX = screenX; state.handY = screenY; state.handZ = 150; 
 
-            // 手势识别
+            // 手势
             const tTip = Math.hypot(lm[4].x - wrist.x, lm[4].y - wrist.y);
             const iTip = Math.hypot(lm[8].x - wrist.x, lm[8].y - wrist.y);
             const mTip = Math.hypot(lm[12].x - wrist.x, lm[12].y - wrist.y);
             const rTip = Math.hypot(lm[16].x - wrist.x, lm[16].y - wrist.y);
             const pTip = Math.hypot(lm[20].x - wrist.x, lm[20].y - wrist.y);
 
-            // 剪刀手: 食指中指伸直
             state.isPeaceSign = (iTip > palmSize * 1.5 && mTip > palmSize * 1.5 && rTip < palmSize * 1.5 && pTip < palmSize * 1.5);
-
-            // 竖大拇指
             const tTipDist = Math.hypot(lm[4].x - lm[9].x, lm[4].y - lm[9].y); 
             state.isThumbsUp = (tTipDist > palmSize && iTip < palmSize * 1.5 && mTip < palmSize * 1.5);
 
-            // 666 (Frozen Mode): 拇指和小指伸直，中间三个弯曲 (放宽了判定)
-            state.isFrozenMode = (tTipDist > palmSize * 0.8 && pTip > palmSize * 1.3 && iTip < palmSize * 1.4 && mTip < palmSize * 1.4);
-
         } else {
             state.isHandDetected = false; state.isPinch = false; state.targetFactor = 0;
-            state.isPeaceSign = false; state.isThumbsUp = false; state.isFrozenMode = false;
+            state.isPeaceSign = false; state.isThumbsUp = false;
         }
     });
     const cameraUtils = new Camera(videoElement, { onFrame: async () => { await hands.send({image: videoElement}); }, width: 640, height: 480 });
@@ -369,11 +369,9 @@
         const posAttr = geometry.attributes.position;
         const colAttr = geometry.attributes.color;
         
-        // UI 更新
         if (state.isHandDetected) {
             statusBar.style.opacity = 1;
             if (state.isPinch) statusBar.innerText = "OPENING CARD";
-            else if (state.isFrozenMode) statusBar.innerText = "🧊 FROZEN MODE 🧊";
             else if (state.isPeaceSign) statusBar.innerText = "❄️ SNOW MODE ❄️";
             else if (state.isThumbsUp) statusBar.innerText = "🌈 RAINBOW MODE 🌈";
             else if (t > 0.5) statusBar.innerText = "💥 FIREWORKS";
@@ -382,7 +380,7 @@
             statusBar.style.opacity = 0;
         }
 
-        // --- 拖尾更新 ---
+        // 拖尾更新
         const trailC = trailGeo.attributes.color.array;
         for(let i=0; i<trailCount; i++) {
             trailC[i*3] *= 0.85; trailC[i*3+1] *= 0.85; trailC[i*3+2] *= 0.85;
@@ -398,18 +396,16 @@
         trailGeo.attributes.position.needsUpdate = true;
         trailGeo.attributes.color.needsUpdate = true;
 
-
-        // --- 粒子更新 ---
+        // 粒子更新
         for (let i = 0; i < particleCount; i++) {
             const ix = i * 3; const iy = i * 3 + 1; const iz = i * 3 + 2;
             let ox = initialPositions[ix]; let oy = initialPositions[iy]; let oz = initialPositions[iz];
             
-            // 粒子位置
             let tx = ox + scatterDirs[ix] * explosionProgress;
             let ty = oy + scatterDirs[iy] * explosionProgress - gravityDrop;
             let tz = oz + scatterDirs[iz] * explosionProgress;
 
-            // 原力场 (Force Field)
+            // 原力场
             if (state.isHandDetected && state.scatterFactor < 0.2) {
                 const dx = tx - state.handX; const dy = ty - state.handY; const dz = tz - state.handZ;
                 const distSq = dx*dx + dy*dy + dz*dz;
@@ -421,7 +417,6 @@
 
             posAttr.array[ix] = tx; posAttr.array[iy] = ty; posAttr.array[iz] = tz;
 
-            // 颜色
             let baseBlink = 0.5 + 0.5 * Math.sin(time * blinkSpeeds[i] + blinkOffsets[i]);
             if (i % 20 === 0 && Math.sin(time * 5 + i) > 0.95) baseBlink = 2.5; 
             if (t > 0.1) baseBlink *= 1.5; 
@@ -430,10 +425,6 @@
                 const hue = (time * 0.2 + i * 0.0001) % 1; 
                 const color = new THREE.Color().setHSL(hue, 1.0, 0.5);
                 colAttr.array[ix] = color.r * 1.5; colAttr.array[iy] = color.g * 1.5; colAttr.array[iz] = color.b * 1.5;
-            } else if (state.isFrozenMode) {
-                const rand = Math.random();
-                let c = rand > 0.6 ? iceBlue : (rand > 0.3 ? iceWhite : icePurple);
-                colAttr.array[ix] = c.r * baseBlink; colAttr.array[iy] = c.g * baseBlink; colAttr.array[iz] = c.b * baseBlink;
             } else {
                 colAttr.array[ix] = originalColors[ix] * baseBlink; colAttr.array[iy] = originalColors[iy] * baseBlink; colAttr.array[iz] = originalColors[iz] * baseBlink;
             }
@@ -441,28 +432,28 @@
         posAttr.needsUpdate = true;
         colAttr.needsUpdate = true; 
 
-        // --- 饰品更新 (独立于粒子) ---
+        // 饰品更新 (关键修复)
         for (let i = 0; i < ornamentCount; i++) {
             const data = ornamentData[i];
             const sprite = data.sprite;
-            let ox = data.ox + data.dx * explosionProgress;
-            let oy = data.oy + data.dy * explosionProgress - gravityDrop;
-            let oz = data.oz + data.dz * explosionProgress;
+            // 基础爆炸位置
+            let tx = data.ox + data.dx * explosionProgress;
+            let ty = data.oy + data.dy * explosionProgress - gravityDrop;
+            let tz = data.oz + data.dz * explosionProgress;
 
-            // 饰品也要受原力场影响 (但不那么强烈)
+            // 同样受原力场影响 (保持与树一致)
             if (state.isHandDetected && state.scatterFactor < 0.2) {
-                const dx = ox - state.handX; const dy = oy - state.handY; const dz = oz - state.handZ;
+                const dx = tx - state.handX; const dy = ty - state.handY; const dz = tz - state.handZ;
                 const distSq = dx*dx + dy*dy + dz*dz;
                 if (distSq < 8000) { 
                     const force = (8000 - distSq) / 8000;
-                    ox += dx * force * 0.5; oy += dy * force * 0.5; oz += dz * force * 0.5;
+                    tx += dx * force * 0.8; ty += dy * force * 0.8; tz += dz * force * 0.8;
                 }
             }
-            sprite.position.set(ox, oy, oz);
+            sprite.position.set(tx, ty, tz);
             sprite.material.opacity = 1 - explosionProgress;
         }
 
-        // 雪花更新
         if (state.isPeaceSign) {
             snowSystem.visible = true;
             const snowPositions = snowGeo.attributes.position.array;
