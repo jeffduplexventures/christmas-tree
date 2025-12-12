@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blink Blink Christmas Tree</title>
+    <title>Duplex Ventures Christmas</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Lato', sans-serif; }
@@ -12,11 +12,18 @@
         #ui-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
             pointer-events: none;
-            display: flex; flex-direction: column; align-items: center; padding-top: 40px;
+            display: flex; flex-direction: column; align-items: center; padding-top: 5vh;
         }
+        
+        /* 修改了标题样式，支持多行，适应手机 */
         h1 {
-            color: #fff; font-family: 'Cinzel', serif; font-size: 32px; letter-spacing: 4px;
-            margin: 0; text-shadow: 0 0 15px rgba(255, 215, 0, 0.8); opacity: 1;
+            color: #fff; font-family: 'Cinzel', serif; 
+            font-size: 26px; /* 稍微调小一点，防止手机上换行太难看 */
+            line-height: 1.4;
+            letter-spacing: 2px;
+            text-align: center;
+            margin: 0; 
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.8); opacity: 1;
             animation: glow 2s ease-in-out infinite alternate;
         }
 
@@ -30,6 +37,7 @@
         #loading {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             color: #d4af37; font-family: 'Cinzel', serif; z-index: 20;
+            text-align: center; width: 100%;
         }
 
         .instruction {
@@ -63,19 +71,23 @@
 </head>
 <body>
 
-    <div id="loading">✨ Lighting up the stars...</div>
+    <div id="loading">✨ Lighting up the stars...<br><span style="font-size:12px; opacity:0.7">Please allow camera access</span></div>
 
     <div id="ui-layer">
-        <h1>MERRY CHRISTMAS</h1>
+        <h1>
+            Duplex Ventures<br>
+            Wish You A<br>
+            Merry Christmas
+        </h1>
         
         <div id="photo-overlay">
             <img id="card-image" src="" alt="Merry Christmas Card">
         </div>
 
         <div class="instruction">
-            🖐 <b>张开</b>: 烟花爆炸 &nbsp;|&nbsp; 
-            ✊ <b>握紧</b>: 变回树 (会闪烁!) <br>
-            👋 <b>旋转手</b>: 旋转 &nbsp;|&nbsp; 👌 <b>捏指</b>: 看贺卡
+            🖐 <b>Open Hand</b>: Fireworks &nbsp;|&nbsp; 
+            ✊ <b>Fist</b>: Tree Mode <br>
+            👋 <b>Wave</b>: Rotate &nbsp;|&nbsp; 👌 <b>Pinch</b>: View Card
         </div>
     </div>
 
@@ -84,7 +96,7 @@
 
 <script>
     // ==========================================
-    // 0. 自动生成贺卡图片 (解决图片不显示问题)
+    // 0. 自动生成贺卡图片 (更新了文字排版)
     // ==========================================
     function generateChristmasCard() {
         const cvs = document.createElement('canvas');
@@ -105,28 +117,35 @@
         ctx.lineWidth = 2;
         ctx.strokeRect(35, 35, 530, 730);
 
-        // 3. 文字
-        ctx.fillStyle = '#FFF';
-        ctx.font = 'bold 80px serif';
+        // 3. 文字设置
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.shadowColor = 'rgba(0,0,0,0.5)';
         ctx.shadowBlur = 10;
+
+        // --- Line 1: Duplex Ventures ---
+        ctx.fillStyle = '#D4AF37'; 
+        ctx.font = 'bold 55px serif'; 
+        ctx.fillText('Duplex Ventures', 300, 260);
+
+        // --- Line 2: Wish You A ---
+        ctx.fillStyle = '#FFF'; 
+        ctx.font = 'italic 40px serif';
+        ctx.fillText('Wish You A', 300, 340);
         
-        ctx.fillText('MERRY', 300, 300);
-        
-        ctx.fillStyle = '#D4AF37'; // Gold
-        ctx.fillText('CHRISTMAS', 300, 420);
+        // --- Line 3: Merry Christmas ---
+        ctx.fillStyle = '#D4AF37'; 
+        ctx.font = 'bold 65px serif';
+        ctx.fillText('Merry Christmas', 300, 440);
 
         // 4. 装饰星星
         ctx.fillStyle = '#FFF';
         ctx.font = '40px serif';
-        ctx.fillText('★', 300, 200);
-        ctx.fillText('★', 300, 550);
+        ctx.fillText('★', 300, 160);
+        ctx.fillText('★', 300, 560);
         
         return cvs.toDataURL();
     }
-    // 将生成的图片赋值给 img 标签
     document.getElementById('card-image').src = generateChristmasCard();
 
 
@@ -165,12 +184,15 @@
     const particleTexture = createGlowTexture();
     particleTexture.needsUpdate = true;
 
-    // --- 构建树 ---
+    // --- 构建树 (新增手机优化) ---
     const treeGroup = new THREE.Group(); 
     treeGroup.position.y = 120;
     scene.add(treeGroup);
     
-    const particleCount = 12000; 
+    // 如果屏幕宽度小于768px(手机)，只用6000个粒子，否则用12000个
+    const isMobile = window.innerWidth < 768;
+    const particleCount = isMobile ? 6000 : 12000; 
+
     const treeHeight = 280;
     const baseRadius = 110;
     
@@ -234,7 +256,7 @@
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     
     const material = new THREE.PointsMaterial({
-        size: 3.5, 
+        size: isMobile ? 4.5 : 3.5, // 手机上粒子稍微大一点点以弥补数量少
         vertexColors: true, map: particleTexture,
         blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 1
     });
