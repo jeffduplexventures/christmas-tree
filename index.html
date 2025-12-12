@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Duplex Ventures Christmas (Elegant)</title>
+    <title>Duplex Ventures Christmas (Platinum)</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Lato', sans-serif; }
@@ -19,7 +19,7 @@
             color: #fff; font-family: 'Cinzel', serif; 
             font-size: 26px; line-height: 1.4; letter-spacing: 2px; text-align: center;
             margin: 0; 
-            text-shadow: 0 0 20px rgba(255, 215, 0, 1), 0 0 40px rgba(255, 0, 0, 0.5); 
+            text-shadow: 0 0 20px rgba(255, 215, 0, 1), 0 0 40px rgba(0, 200, 255, 0.5); 
             opacity: 1;
             animation: glow 2s ease-in-out infinite alternate;
         }
@@ -47,11 +47,11 @@
 
         .instruction {
             position: absolute; bottom: 30px; width: 100%; text-align: center;
-            color: rgba(255, 255, 255, 0.9); font-size: 13px; letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.9); font-size: 12px; letter-spacing: 0.5px;
             background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
             padding-bottom: 25px; line-height: 1.8; text-shadow: 0 0 2px black;
         }
-        .instruction b { color: #ffd700; text-shadow: 0 0 5px rgba(255, 215, 0, 0.6); }
+        .instruction b { color: #ffd700; }
 
         #photo-overlay {
             position: absolute; top: 50%; left: 50%;
@@ -76,15 +76,16 @@
 </head>
 <body>
 
-    <div id="loading">✨ Hanging Ornaments...<br><span style="font-size:12px; opacity:0.7">Allow Camera Access</span></div>
+    <div id="loading">✨ Creating Magic...<br><span style="font-size:12px; opacity:0.7">Allow Camera Access</span></div>
 
     <div id="ui-layer">
         <h1>Duplex Ventures<br>Wish You A<br>Merry Christmas</h1>
         <div id="status-bar">Detecting...</div>
         <div id="photo-overlay"><img id="card-image" src="" alt="Card"></div>
         <div class="instruction">
-            🖐 <b>Open</b>: Fireworks &nbsp;|&nbsp; ✌️ <b>Peace</b>: Snow &nbsp;|&nbsp; 👍 <b>Thumb</b>: Rainbow<br>
-            👋 <b>Wave</b>: Rotate &nbsp;|&nbsp; 👌 <b>Pinch</b>: View Card
+            🖐 <b>Open</b>: Fireworks &nbsp;|&nbsp; ✌️ <b>Peace</b>: Snow<br>
+            👍 <b>Thumb</b>: Rainbow &nbsp;|&nbsp; 🤙 <b>666</b>: Frozen Mode<br>
+            👋 <b>Wave</b>: Select &nbsp;|&nbsp; 👌 <b>Pinch</b>: View Card
         </div>
     </div>
 
@@ -141,7 +142,7 @@
     const treeGroup = new THREE.Group(); treeGroup.position.y = 120; scene.add(treeGroup);
     
     const isMobile = window.innerWidth < 768;
-    const particleCount = isMobile ? 7000 : 13000; 
+    const particleCount = isMobile ? 6500 : 13000; 
     const treeHeight = 280; const baseRadius = 110;
     
     const geometry = new THREE.BufferGeometry();
@@ -153,10 +154,16 @@
     const blinkOffsets = new Float32Array(particleCount);
     const blinkSpeeds = new Float32Array(particleCount);
 
+    // 标准圣诞色
     const colGreen = new THREE.Color(0x00ff44);
     const colRed = new THREE.Color(0xff0000);
     const colGold = new THREE.Color(0xffd700);
     const colWhite = new THREE.Color(0xffffff);
+
+    // 冰雪奇缘色
+    const iceBlue = new THREE.Color(0x00ffff);
+    const iceWhite = new THREE.Color(0xffffff);
+    const icePurple = new THREE.Color(0x8800ff);
 
     for (let i = 0; i < particleCount; i++) {
         const hRatio = Math.pow(Math.random(), 0.8);
@@ -197,7 +204,7 @@
     treeGroup.add(particles);
 
     // ==========================================
-    // 饰品系统 (优化版：大小随机 & 更小巧)
+    // 饰品系统
     // ==========================================
     const ornamentGroup = new THREE.Group();
     treeGroup.add(ornamentGroup); 
@@ -210,43 +217,32 @@
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c, c, 30, 0, Math.PI * 2); ctx.fill();
         return new THREE.Texture(cvs);
     }
-
     const texRed = createOrnamentTexture('#ff0033');
     const texGold = createOrnamentTexture('#ffd700');
     const texBlue = createOrnamentTexture('#0066ff');
-    texRed.needsUpdate = true; texGold.needsUpdate = true; texBlue.needsUpdate = true;
-
+    
     const ornamentData = [];
-    const ornamentCount = 55; // 稍微增加一点数量
+    const ornamentCount = 55;
 
     for (let i = 0; i < ornamentCount; i++) {
         const mat = new THREE.SpriteMaterial({ 
-            map: i % 3 === 0 ? texRed : (i % 3 === 1 ? texGold : texBlue),
-            transparent: true 
+            map: i % 3 === 0 ? texRed : (i % 3 === 1 ? texGold : texBlue), transparent: true 
         });
         const sprite = new THREE.Sprite(mat);
-        
         const hRatio = Math.random() * 0.9;
         const y = (hRatio - 0.5) * treeHeight;
-        const r = baseRadius * (1 - hRatio) + 5; 
-        const theta = Math.random() * Math.PI * 2;
+        const r = baseRadius * (1 - hRatio) + 5; const theta = Math.random() * Math.PI * 2;
+        const x = r * Math.cos(theta); const z = r * Math.sin(theta);
         
-        const x = r * Math.cos(theta);
-        const z = r * Math.sin(theta);
         sprite.position.set(x, y, z);
-        
-        // --- 核心修改：随机大小 (Random Scale) ---
-        // 之前是固定 12，现在在 4 到 9 之间随机
         const randomScale = 4 + Math.random() * 5; 
         sprite.scale.set(randomScale, randomScale, 1); 
-        
         ornamentGroup.add(sprite);
 
         const dirX = x; const dirY = y - 50; const dirZ = z;
         const len = Math.sqrt(dirX*dirX + dirY*dirY + dirZ*dirZ);
         ornamentData.push({
-            sprite: sprite,
-            ox: x, oy: y, oz: z, 
+            sprite: sprite, ox: x, oy: y, oz: z, 
             dx: (dirX/len) * 300, dy: (dirY/len) * 300, dz: (dirZ/len) * 300
         });
     }
@@ -256,43 +252,55 @@
     const starOrigin = { x: 0, y: treeHeight/2 + 8, z: 0 };
     topStar.position.set(starOrigin.x, starOrigin.y, starOrigin.z);
     treeGroup.add(topStar);
-    const glowMat = new THREE.SpriteMaterial({ map: particleTexture, color: 0xffd700, blending: THREE.AdditiveBlending, opacity: 1.0 });
-    const starGlow = new THREE.Sprite(glowMat); starGlow.scale.set(100, 100, 1); topStar.add(starGlow);
+    const starGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: particleTexture, color: 0xffd700, blending: THREE.AdditiveBlending, opacity: 1.0 }));
+    starGlow.scale.set(100, 100, 1); topStar.add(starGlow);
 
     // ==========================================
-    // 雪花系统 (Snow System)
+    // 新增：指尖拖尾系统 (Trail System)
+    // ==========================================
+    const trailCount = 50;
+    const trailGeo = new THREE.BufferGeometry();
+    const trailPos = new Float32Array(trailCount * 3);
+    const trailAlpha = new Float32Array(trailCount);
+    for(let i=0; i<trailCount; i++) {
+        trailPos[i*3] = 9999; trailPos[i*3+1] = 9999; trailPos[i*3+2] = 9999;
+        trailAlpha[i] = 0;
+    }
+    trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
+    trailGeo.setAttribute('alpha', new THREE.BufferAttribute(trailAlpha, 1));
+    
+    // Shader Material for Trail (Fade out)
+    const trailMat = new THREE.PointsMaterial({
+        size: 8, color: 0xffd700, map: particleTexture, 
+        transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const trailSystem = new THREE.Points(trailGeo, trailMat);
+    scene.add(trailSystem);
+    
+    let trailHead = 0; // Circular buffer index
+
+    // ==========================================
+    // 雪花系统
     // ==========================================
     const snowCount = 1000;
     const snowGeo = new THREE.BufferGeometry();
     const snowPos = new Float32Array(snowCount * 3);
     const snowVel = new Float32Array(snowCount); 
-
     for(let i=0; i<snowCount; i++) {
-        snowPos[i*3] = (Math.random() - 0.5) * 800; 
-        snowPos[i*3+1] = Math.random() * 600 + 200; 
-        snowPos[i*3+2] = (Math.random() - 0.5) * 600; 
+        snowPos[i*3] = (Math.random() - 0.5) * 800; snowPos[i*3+1] = Math.random() * 600 + 200; snowPos[i*3+2] = (Math.random() - 0.5) * 600; 
         snowVel[i] = 1 + Math.random() * 3; 
     }
     snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
-    const snowMat = new THREE.PointsMaterial({
-        color: 0xffffff, size: 6, map: particleTexture, transparent: true, opacity: 0.8,
-        blending: THREE.AdditiveBlending, depthWrite: false
-    });
-    const snowSystem = new THREE.Points(snowGeo, snowMat);
-    scene.add(snowSystem);
-    snowSystem.visible = false; 
+    const snowSystem = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 6, map: particleTexture, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }));
+    scene.add(snowSystem); snowSystem.visible = false; 
 
     // ==========================================
     // 2. 逻辑 & 动画
     // ==========================================
     let state = { 
-        isHandDetected: false, 
-        handRotation: 0, 
-        isPinch: false, 
-        scatterFactor: 0, 
-        targetFactor: 0,
-        isPeaceSign: false, 
-        isThumbsUp: false   
+        isHandDetected: false, handRotation: 0, isPinch: false, scatterFactor: 0, targetFactor: 0,
+        isPeaceSign: false, isThumbsUp: false, isFrozenMode: false,
+        handX: 0, handY: 0, handZ: 0 // 手的位置(用于原力场)
     };
     const photoOverlay = document.getElementById('photo-overlay');
     const videoElement = document.getElementsByClassName('input_video')[0];
@@ -312,23 +320,36 @@
             const wrist = lm[0]; const middleMCP = lm[9]; const palmSize = Math.hypot(middleMCP.x - wrist.x, middleMCP.y - wrist.y);
             const tipsAvg = (Math.hypot(lm[8].x-wrist.x, lm[8].y-wrist.y) + Math.hypot(lm[12].x-wrist.x, lm[12].y-wrist.y) + Math.hypot(lm[16].x-wrist.x, lm[16].y-wrist.y)) / 3;
             state.targetFactor = Math.max(0, Math.min(1, (tipsAvg / palmSize - 1.2) / 1.0));
-
             const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
             state.isPinch = (pinchDist < 0.05 * (palmSize * 10) && state.targetFactor > 0.3);
 
+            // 映射食指尖坐标到3D空间 (简略估算)
+            // Mediapipe x,y 是 0~1. x: left-right, y: top-bottom
+            // Threejs: x: -W~W, y: H~-H
+            const screenX = (0.5 - lm[8].x) * 600; // 这里的系数需要根据FOV调整，600是经验值
+            const screenY = (0.5 - lm[8].y) * 450;
+            state.handX = screenX; state.handY = screenY; state.handZ = 150; // 假设手在Z=150平面
+
+            // 手势识别
             const iTip = Math.hypot(lm[8].x - wrist.x, lm[8].y - wrist.y);
             const mTip = Math.hypot(lm[12].x - wrist.x, lm[12].y - wrist.y);
             const rTip = Math.hypot(lm[16].x - wrist.x, lm[16].y - wrist.y);
             const pTip = Math.hypot(lm[20].x - wrist.x, lm[20].y - wrist.y);
+            
+            // 剪刀手
             state.isPeaceSign = (iTip > palmSize * 1.8 && mTip > palmSize * 1.8 && rTip < palmSize * 1.5 && pTip < palmSize * 1.5);
 
+            // 竖大拇指
             const tTipDist = Math.hypot(lm[4].x - lm[9].x, lm[4].y - lm[9].y); 
             const iTipDist = Math.hypot(lm[8].x - lm[0].x, lm[8].y - lm[0].y); 
             state.isThumbsUp = (tTipDist > palmSize && iTipDist < palmSize * 1.5);
 
+            // 666 (Frozen Mode): 拇指小指伸直，中间三指弯曲
+            state.isFrozenMode = (tTipDist > palmSize && pTip > palmSize * 1.5 && iTip < palmSize * 1.5 && mTip < palmSize * 1.5);
+
         } else {
             state.isHandDetected = false; state.isPinch = false; state.targetFactor = 0;
-            state.isPeaceSign = false; state.isThumbsUp = false;
+            state.isPeaceSign = false; state.isThumbsUp = false; state.isFrozenMode = false;
         }
     });
     const cameraUtils = new Camera(videoElement, { onFrame: async () => { await hands.send({image: videoElement}); }, width: 640, height: 480 });
@@ -346,34 +367,53 @@
         const posAttr = geometry.attributes.position;
         const colAttr = geometry.attributes.color;
         
-        // --- 状态提示更新 ---
+        // UI 更新
         if (state.isHandDetected) {
             statusBar.style.opacity = 1;
             if (state.isPinch) statusBar.innerText = "OPENING CARD";
             else if (state.isPeaceSign) statusBar.innerText = "❄️ SNOW MODE ❄️";
             else if (state.isThumbsUp) statusBar.innerText = "🌈 RAINBOW MODE 🌈";
+            else if (state.isFrozenMode) statusBar.innerText = "🧊 FROZEN MODE 🧊";
             else if (t > 0.5) statusBar.innerText = "💥 FIREWORKS";
             else statusBar.innerText = "TREE MODE";
         } else {
             statusBar.style.opacity = 0;
         }
 
-        // --- 饰品爆炸逻辑 ---
-        for (let i = 0; i < ornamentCount; i++) {
-            const data = ornamentData[i];
-            const sprite = data.sprite;
-            // 正常位置 + 爆炸位移
-            sprite.position.x = data.ox + data.dx * explosionProgress;
-            sprite.position.z = data.oz + data.dz * explosionProgress;
-            sprite.position.y = data.oy + data.dy * explosionProgress - gravityDrop;
-            sprite.material.opacity = 1 - explosionProgress;
+        // --- 拖尾更新 (Magic Trail) ---
+        if (state.isHandDetected) {
+            trailPos[trailHead * 3] = state.handX;
+            trailPos[trailHead * 3 + 1] = state.handY;
+            trailPos[trailHead * 3 + 2] = state.handZ; // 略微靠前
+            trailAlpha[trailHead] = 1.0; // 新点不透明
+            trailHead = (trailHead + 1) % trailCount;
         }
+        const trailPositions = trailGeo.attributes.position.array;
+        const trailAlphas = trailGeo.attributes.alpha.array;
+        for(let i=0; i<trailCount; i++) {
+            trailAlphas[i] *= 0.90; // 慢慢消失
+        }
+        trailGeo.attributes.position.needsUpdate = true;
+        trailGeo.attributes.alpha.needsUpdate = true;
 
-        // --- 树粒子更新 ---
+
+        // --- 粒子更新 ---
         for (let i = 0; i < particleCount; i++) {
             const ix = i * 3; const iy = i * 3 + 1; const iz = i * 3 + 2;
-            const ox = initialPositions[ix]; const oy = initialPositions[iy]; const oz = initialPositions[iz];
+            let ox = initialPositions[ix]; let oy = initialPositions[iy]; let oz = initialPositions[iz];
             
+            // 原力场 (Force Field): 如果手靠近，粒子会被推开
+            if (state.isHandDetected && state.scatterFactor < 0.2) {
+                const dx = ox - state.handX; const dy = oy - state.handY; const dz = oz - state.handZ;
+                const distSq = dx*dx + dy*dy + dz*dz;
+                if (distSq < 10000) { // 影响半径 100
+                    const force = (10000 - distSq) / 10000;
+                    ox += dx * force * 0.5;
+                    oy += dy * force * 0.5;
+                    oz += dz * force * 0.5;
+                }
+            }
+
             posAttr.array[ix] = ox + scatterDirs[ix] * explosionProgress;
             posAttr.array[iz] = oz + scatterDirs[iz] * explosionProgress;
             posAttr.array[iy] = oy + scatterDirs[iy] * explosionProgress - gravityDrop;
@@ -382,23 +422,36 @@
             if (i % 20 === 0 && Math.sin(time * 5 + i) > 0.95) baseBlink = 2.5; 
             if (t > 0.1) baseBlink *= 1.5; 
 
-            // --- 彩虹模式 ---
+            // 颜色逻辑
             if (state.isThumbsUp) {
+                // 彩虹
                 const hue = (time * 0.2 + i * 0.0001) % 1; 
                 const color = new THREE.Color().setHSL(hue, 1.0, 0.5);
-                colAttr.array[ix] = color.r * 1.5; 
-                colAttr.array[iy] = color.g * 1.5;
-                colAttr.array[iz] = color.b * 1.5;
+                colAttr.array[ix] = color.r * 1.5; colAttr.array[iy] = color.g * 1.5; colAttr.array[iz] = color.b * 1.5;
+            } else if (state.isFrozenMode) {
+                // 冰雪
+                const rand = Math.random();
+                let c = rand > 0.6 ? iceBlue : (rand > 0.3 ? iceWhite : icePurple);
+                colAttr.array[ix] = c.r * baseBlink; colAttr.array[iy] = c.g * baseBlink; colAttr.array[iz] = c.b * baseBlink;
             } else {
-                colAttr.array[ix] = originalColors[ix] * baseBlink;
-                colAttr.array[iy] = originalColors[iy] * baseBlink;
-                colAttr.array[iz] = originalColors[iz] * baseBlink;
+                // 经典
+                colAttr.array[ix] = originalColors[ix] * baseBlink; colAttr.array[iy] = originalColors[iy] * baseBlink; colAttr.array[iz] = originalColors[iz] * baseBlink;
             }
         }
         posAttr.needsUpdate = true;
         colAttr.needsUpdate = true; 
 
-        // --- 雪花系统 ---
+        // 饰品更新
+        for (let i = 0; i < ornamentCount; i++) {
+            const data = ornamentData[i];
+            const sprite = data.sprite;
+            sprite.position.x = data.ox + data.dx * explosionProgress;
+            sprite.position.z = data.oz + data.dz * explosionProgress;
+            sprite.position.y = data.oy + data.dy * explosionProgress - gravityDrop;
+            sprite.material.opacity = 1 - explosionProgress;
+        }
+
+        // 雪花更新
         if (state.isPeaceSign) {
             snowSystem.visible = true;
             const snowPositions = snowGeo.attributes.position.array;
