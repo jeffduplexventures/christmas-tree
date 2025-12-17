@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Duplex Ventures Christmas (Ultimate Edition)</title>
+    <title>Duplex Ventures Christmas (Fixed)</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Lato', sans-serif; user-select: none; }
@@ -14,7 +14,6 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
             pointer-events: none;
             display: flex; flex-direction: column; align-items: center; padding-top: 5vh;
-            transition: opacity 0.5s;
         }
         
         h1 {
@@ -38,30 +37,18 @@
             text-shadow: 0 0 10px #00ffcc;
         }
 
-        /* Start Screen Overlay */
-        #start-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 999;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: #d4af37; cursor: pointer;
+        /* 音效提示 */
+        #sound-hint {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.6); color: #d4af37; border: 1px solid #d4af37;
+            padding: 10px 20px; border-radius: 30px; font-size: 14px; pointer-events: none;
+            opacity: 1; transition: opacity 1s; z-index: 999;
+            animation: pulse 2s infinite;
         }
-        #start-screen h2 { font-family: 'Cinzel', serif; font-size: 30px; margin-bottom: 20px; text-align: center;}
-        #start-btn {
-            padding: 15px 40px; border: 2px solid #d4af37; color: #d4af37;
-            font-family: 'Lato', sans-serif; font-size: 18px; letter-spacing: 2px;
-            background: transparent; border-radius: 30px;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); box-shadow: 0 0 15px #d4af37; } 100% { transform: scale(1); } }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
         .input_video { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
         
-        #loading {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: #fff; font-family: 'Lato', sans-serif; font-size: 14px; z-index: 20;
-            text-align: center; width: 100%; opacity: 0.7; display: none;
-        }
-
         .instruction {
             position: absolute; bottom: 30px; width: 100%; text-align: center;
             color: rgba(255, 255, 255, 0.9); font-size: 12px; letter-spacing: 0.5px;
@@ -103,22 +90,16 @@
         <source src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_cda662e737.mp3?filename=fireworks-29629.mp3" type="audio/mpeg">
     </audio>
 
-    <div id="start-screen" onclick="startExperience()">
-        <h2>Duplex Ventures<br>Christmas Magic</h2>
-        <div id="start-btn">TAP TO START</div>
-        <p style="margin-top:20px; font-size:12px; color:#aaa;">Turn on sound for full experience</p>
-    </div>
-
-    <div id="loading">✨ Initializing Camera...</div>
+    <div id="sound-hint">🎵 Tap anywhere for Music & Magic</div>
 
     <div id="ui-layer">
         <h1>Duplex Ventures<br>Wish You A<br>Merry Christmas</h1>
-        <div id="status-bar">Detecting Hand...</div>
+        <div id="status-bar">Starting Camera...</div>
         <div id="photo-overlay"><img id="card-image" src="" alt="Card"></div>
         <div class="instruction">
-            🖐 <b>Open Hand</b>: Fireworks &nbsp;|&nbsp; ✌️ <b>Peace</b>: Snow<br>
-            👍 <b>Thumb</b>: Rainbow &nbsp;|&nbsp; ☝️ <b>Index</b>: Magic Trail<br>
-            👌 <b>Pinch</b>: Open Card
+            🖐 <b>Open</b>: Fireworks &nbsp;|&nbsp; ✌️ <b>Peace</b>: Snow<br>
+            👍 <b>Thumb</b>: Rainbow &nbsp;|&nbsp; ☝️ <b>Index</b>: Trail<br>
+            👌 <b>Pinch</b>: Card
         </div>
     </div>
 
@@ -127,41 +108,23 @@
 
 <script>
     // ==========================================
-    // 0. AUDIO & START LOGIC
+    // 0. 初始化与音频逻辑
     // ==========================================
-    let isStarted = false;
     const bgm = document.getElementById('bgm');
     const sfxChime = document.getElementById('sfx-chime');
     const sfxBoom = document.getElementById('sfx-boom');
-    
-    // Lower BGM volume
     bgm.volume = 0.4;
-    sfxChime.volume = 0.6;
-    sfxBoom.volume = 0.5;
-
-    async function startExperience() {
-        if(isStarted) return;
-        isStarted = true;
-        
-        // Hide Start Screen
-        const startScreen = document.getElementById('start-screen');
-        startScreen.style.opacity = '0';
-        setTimeout(() => startScreen.style.display = 'none', 500);
-
-        // Play Audio
-        try {
-            await bgm.play();
-        } catch(e) { console.log("Audio play failed", e); }
-
-        // Show loading
-        document.getElementById('loading').style.display = 'block';
-
-        // Start Camera
-        cameraUtils.start();
-    }
+    
+    // 点击任意位置开启声音 (浏览器策略)
+    document.body.addEventListener('click', () => {
+        document.getElementById('sound-hint').style.opacity = 0;
+        if(bgm.paused) {
+            bgm.play().catch(e => console.log("Audio waiting for interaction"));
+        }
+    }, { once: true });
 
     // ==========================================
-    // 1. GENERATE CARD IMAGE
+    // 1. 生成卡片图片
     // ==========================================
     function generateChristmasCard() {
         const cvs = document.createElement('canvas'); cvs.width = 600; cvs.height = 800;
@@ -169,7 +132,7 @@
         const grad = ctx.createLinearGradient(0,0,0,800); grad.addColorStop(0, '#8B0000'); grad.addColorStop(1, '#300000');
         ctx.fillStyle = grad; ctx.fillRect(0, 0, 600, 800);
         ctx.strokeStyle = '#D4AF37'; ctx.lineWidth = 15; ctx.strokeRect(20, 20, 560, 760); ctx.lineWidth = 2; ctx.strokeRect(35, 35, 530, 730);
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 10;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
         ctx.fillStyle = '#D4AF37'; ctx.font = 'bold 55px serif'; ctx.fillText('Duplex Ventures', 300, 260);
         ctx.fillStyle = '#FFF'; ctx.font = 'italic 40px serif'; ctx.fillText('Wish You A', 300, 340);
         ctx.fillStyle = '#D4AF37'; ctx.font = 'bold 65px serif'; ctx.fillText('Merry Christmas', 300, 440);
@@ -179,7 +142,7 @@
     document.getElementById('card-image').src = generateChristmasCard();
 
     // ==========================================
-    // 2. THREE.JS SETUP
+    // 2. THREE.JS 场景设置
     // ==========================================
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
@@ -188,12 +151,13 @@
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 3000);
     camera.position.set(0, 150, 450); camera.lookAt(0, 120, 0);
+    
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    // GLOW TEXTURE
+    // 粒子纹理
     function createSuperGlowTexture() {
         const size = 64; const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
         const ctx = canvas.getContext('2d'); const c = size / 2;
@@ -207,11 +171,11 @@
     const particleTexture = createSuperGlowTexture();
     particleTexture.needsUpdate = true;
 
-    // --- TREE PARTICLES ---
+    // --- 圣诞树粒子 ---
     const treeGroup = new THREE.Group(); treeGroup.position.y = 120; scene.add(treeGroup);
     
     const isMobile = window.innerWidth < 768;
-    const particleCount = isMobile ? 6500 : 13000; 
+    const particleCount = isMobile ? 6000 : 12000; 
     const treeHeight = 280; const baseRadius = 110;
     
     const geometry = new THREE.BufferGeometry();
@@ -266,16 +230,16 @@
     const particles = new THREE.Points(geometry, material);
     treeGroup.add(particles);
 
-    // --- ORNAMENTS ---
+    // --- 装饰球 ---
     const ornamentGroup = new THREE.Group();
     treeGroup.add(ornamentGroup); 
 
     function createOrnamentTexture(colorHex) {
-        const size = 128; const cvs = document.createElement('canvas'); cvs.width = size; cvs.height = size;
+        const size = 64; const cvs = document.createElement('canvas'); cvs.width = size; cvs.height = size;
         const ctx = cvs.getContext('2d'); const c = size / 2;
-        const g = ctx.createRadialGradient(c - 20, c - 20, 5, c, c, 60);
+        const g = ctx.createRadialGradient(c-10, c-10, 2, c, c, 30);
         g.addColorStop(0, '#ffffff'); g.addColorStop(0.3, colorHex); g.addColorStop(1, '#000000'); 
-        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c, c, 60, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c, c, 30, 0, Math.PI * 2); ctx.fill();
         return new THREE.Texture(cvs);
     }
     const texRed = createOrnamentTexture('#ff0033');
@@ -284,7 +248,7 @@
     texRed.needsUpdate = true; texGold.needsUpdate = true; texBlue.needsUpdate = true;
     
     const ornamentData = [];
-    const ornamentCount = 55;
+    const ornamentCount = 50;
 
     for (let i = 0; i < ornamentCount; i++) {
         const mat = new THREE.SpriteMaterial({ map: i % 3 === 0 ? texRed : (i % 3 === 1 ? texGold : texBlue), transparent: true, opacity: 1 });
@@ -307,7 +271,7 @@
         });
     }
 
-    // TOP STAR
+    // --- 顶星 ---
     const topStar = new THREE.Mesh(new THREE.OctahedronGeometry(12, 0), new THREE.MeshBasicMaterial({ color: 0xffd700, wireframe: true }));
     const starOrigin = { x: 0, y: treeHeight/2 + 8, z: 0 };
     topStar.position.set(starOrigin.x, starOrigin.y, starOrigin.z);
@@ -315,8 +279,8 @@
     const starGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: particleTexture, color: 0xffd700, blending: THREE.AdditiveBlending, opacity: 1.0 }));
     starGlow.scale.set(100, 100, 1); topStar.add(starGlow);
 
-    // TRAIL
-    const trailCount = 60;
+    // --- 魔法拖尾 ---
+    const trailCount = 50;
     const trailGeo = new THREE.BufferGeometry();
     const trailPos = new Float32Array(trailCount * 3);
     const trailColors = new Float32Array(trailCount * 3); 
@@ -325,8 +289,8 @@
     scene.add(trailSystem);
     let trailHead = 0;
 
-    // SNOW
-    const snowCount = 1000;
+    // --- 雪花 ---
+    const snowCount = 800;
     const snowGeo = new THREE.BufferGeometry();
     const snowPos = new Float32Array(snowCount * 3);
     const snowVel = new Float32Array(snowCount); 
@@ -339,7 +303,7 @@
     scene.add(snowSystem); snowSystem.visible = false; 
 
     // ==========================================
-    // 3. HAND TRACKING (OPTIMIZED)
+    // 3. 手势识别逻辑
     // ==========================================
     let state = { 
         isHandDetected: false, handRotation: 0, isPinch: false, scatterFactor: 0, targetFactor: 0,
@@ -347,7 +311,6 @@
         handX: 0, handY: 0, handZ: 0, lastDetectTime: Date.now()
     };
     
-    // SFX Flags
     let hasPlayedBoom = false;
     let hasPlayedChime = false;
 
@@ -355,81 +318,67 @@
     const videoElement = document.getElementsByClassName('input_video')[0];
     const statusBar = document.getElementById('status-bar');
     
+    // 初始化 MediaPipe
     const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
     hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
     
     hands.onResults(results => {
-        document.getElementById('loading').style.display = 'none';
-        
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
             state.lastDetectTime = Date.now();
             state.isHandDetected = true;
             
             const lm = results.multiHandLandmarks[0];
             const p5 = lm[5]; const p17 = lm[17];
-            
-            // Calc Rotation
             state.handRotation = Math.atan2(p17.y - p5.y, p17.x - p5.x);
             
             const wrist = lm[0]; 
             const palmSize = Math.hypot(lm[9].x - wrist.x, lm[9].y - wrist.y);
             const tipsAvg = (Math.hypot(lm[8].x-wrist.x, lm[8].y-wrist.y) + Math.hypot(lm[12].x-wrist.x, lm[12].y-wrist.y) + Math.hypot(lm[16].x-wrist.x, lm[16].y-wrist.y)) / 3;
             
-            // Map open/close (0 to 1)
+            // 目标因子 (0=闭合/树, 1=张开/爆炸)
             state.targetFactor = Math.max(0, Math.min(1, (tipsAvg / palmSize - 1.2) / 1.0));
             
-            // Pinch Check
+            // 捏合检测
             const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
             state.isPinch = (pinchDist < 0.05 * (palmSize * 10) && state.targetFactor > 0.3);
 
-            // Coordinates (MIRRORED MAPPING FIXED)
-            // 0.5 - lm[8].x flips the X axis for mirror effect
-            const screenX = (0.5 - lm[8].x) * 800; // Multiplier widened for better reach
+            // 坐标修正 (镜像)
+            const screenX = (0.5 - lm[8].x) * 800; 
             const screenY = (0.5 - lm[8].y) * 600;
             state.handX = screenX; state.handY = screenY; state.handZ = 150; 
 
-            // Gesture Logic
+            // 手势
             const iTip = Math.hypot(lm[8].x - wrist.x, lm[8].y - wrist.y);
             const mTip = Math.hypot(lm[12].x - wrist.x, lm[12].y - wrist.y);
-            const rTip = Math.hypot(lm[16].x - wrist.x, lm[16].y - wrist.y);
-            const pTip = Math.hypot(lm[20].x - wrist.x, lm[20].y - wrist.y);
-            const tTipDist = Math.hypot(lm[4].x - lm[9].x, lm[4].y - lm[9].y); 
-            
-            state.isPeaceSign = (iTip > palmSize * 1.5 && mTip > palmSize * 1.5 && rTip < palmSize * 1.5 && pTip < palmSize * 1.5);
-            state.isThumbsUp = (tTipDist > palmSize && iTip < palmSize * 1.5 && mTip < palmSize * 1.5);
+            state.isPeaceSign = (iTip > palmSize * 1.5 && mTip > palmSize * 1.5 && lm[16].y > lm[14].y);
+            state.isThumbsUp = (lm[4].y < lm[3].y && lm[8].y > lm[6].y);
 
         } else {
             state.isHandDetected = false; 
             state.isPinch = false; 
-            state.targetFactor = 0; // Auto close if hand lost
+            state.targetFactor = 0; // 手消失时，树自动复原
             state.isPeaceSign = false; 
             state.isThumbsUp = false;
         }
     });
 
-    // FRAME SKIPPING LOGIC (Optimized for Mobile)
-    let frameCounter = 0;
-    const skipFrames = 2; // Process every 3rd frame (15-20FPS for tracking, 60FPS for render)
-
+    // 启动摄像头
     const cameraUtils = new Camera(videoElement, {
         onFrame: async () => {
-            frameCounter++;
-            if (frameCounter % (skipFrames + 1) === 0) {
-                await hands.send({image: videoElement});
-            }
+            await hands.send({image: videoElement});
         },
         width: 640, height: 480
     });
+    cameraUtils.start();
 
     // ==========================================
-    // 4. ANIMATION LOOP
+    // 4. 动画循环
     // ==========================================
     function animate() {
         requestAnimationFrame(animate);
         const time = Date.now() * 0.003; 
 
-        // --- Fast Close Logic ---
-        // Closing (target < current) = Fast (0.15), Opening = Slow (0.03)
+        // 核心逻辑：关闭快 (0.15)，打开慢 (0.03)
         const animSpeed = (state.targetFactor < state.scatterFactor) ? 0.15 : 0.03;
         state.scatterFactor += (state.targetFactor - state.scatterFactor) * animSpeed;
         
@@ -437,16 +386,13 @@
         const explosionProgress = 1 - Math.pow(1 - t, 3);
         const gravityDrop = 200 * t * t;
 
-        // --- Audio Triggers ---
-        // Trigger Explosion Sound
-        if (t > 0.6 && !hasPlayedBoom) { sfxBoom.currentTime=0; sfxBoom.play(); hasPlayedBoom = true; }
-        if (t < 0.2) { hasPlayedBoom = false; } // Reset trigger
-        
-        // Trigger Pinch Sound
-        if (state.isPinch && !hasPlayedChime) { sfxChime.currentTime=0; sfxChime.play(); hasPlayedChime = true; }
+        // 音效触发
+        if (t > 0.6 && !hasPlayedBoom) { sfxBoom.currentTime=0; sfxBoom.play().catch(()=>{}); hasPlayedBoom = true; }
+        if (t < 0.2) { hasPlayedBoom = false; }
+        if (state.isPinch && !hasPlayedChime) { sfxChime.currentTime=0; sfxChime.play().catch(()=>{}); hasPlayedChime = true; }
         if (!state.isPinch) { hasPlayedChime = false; }
 
-        // --- UI Updates ---
+        // 状态文字更新
         if (state.isHandDetected) {
             statusBar.style.opacity = 1;
             if (state.isPinch) statusBar.innerText = "OPENING CARD";
@@ -455,16 +401,16 @@
             else if (t > 0.5) statusBar.innerText = "💥 FIREWORKS";
             else statusBar.innerText = "Ready";
         } else {
-            // Timeout warning
+            // 如果5秒没检测到手，提示用户
             if (Date.now() - state.lastDetectTime > 5000) {
                 statusBar.style.opacity = 1;
-                statusBar.innerText = "⚠️ No Hand Detected";
+                statusBar.innerText = "Show Your Hand 🖐";
             } else {
                 statusBar.style.opacity = 0;
             }
         }
 
-        // --- Trail Logic ---
+        // 拖尾更新
         const trailC = trailGeo.attributes.color.array;
         for(let i=0; i<trailCount; i++) {
             trailC[i*3] *= 0.85; trailC[i*3+1] *= 0.85; trailC[i*3+2] *= 0.85;
@@ -480,7 +426,7 @@
         trailGeo.attributes.position.needsUpdate = true;
         trailGeo.attributes.color.needsUpdate = true;
 
-        // --- Tree Particles ---
+        // 粒子更新
         const posAttr = geometry.attributes.position;
         const colAttr = geometry.attributes.color;
 
@@ -492,7 +438,6 @@
             let ty = oy + scatterDirs[iy] * explosionProgress - gravityDrop;
             let tz = oz + scatterDirs[iz] * explosionProgress;
 
-            // Interactive force (Repulsion)
             if (state.isHandDetected && state.scatterFactor < 0.2) {
                 const dx = tx - state.handX; const dy = ty - state.handY; const dz = tz - state.handZ;
                 const distSq = dx*dx + dy*dy + dz*dz;
@@ -519,14 +464,14 @@
         posAttr.needsUpdate = true;
         colAttr.needsUpdate = true; 
 
-        // --- Ornaments ---
+        // 装饰物更新
         for (let i = 0; i < ornamentCount; i++) {
             const data = ornamentData[i];
             const sprite = data.sprite;
             let tx = data.ox + data.dx * explosionProgress;
             let ty = data.oy + data.dy * explosionProgress - gravityDrop;
             let tz = data.oz + data.dz * explosionProgress;
-
+            
             if (state.isHandDetected && state.scatterFactor < 0.2) {
                 const dx = tx - state.handX; const dy = ty - state.handY; const dz = tz - state.handZ;
                 const distSq = dx*dx + dy*dy + dz*dz;
@@ -539,13 +484,13 @@
             sprite.material.opacity = 1 - explosionProgress;
         }
 
-        // --- Snow ---
+        // 雪花更新
         if (state.isPeaceSign) {
             snowSystem.visible = true;
             const snowPositions = snowGeo.attributes.position.array;
             for(let i=0; i<snowCount; i++) {
                 snowPositions[i*3+1] -= snowVel[i];
-                snowPositions[i*3] += Math.sin(time + i) * 0.5; // Wind
+                snowPositions[i*3] += Math.sin(time + i) * 0.5;
                 if (snowPositions[i*3+1] < -200) snowPositions[i*3+1] = 600;
             }
             snowGeo.attributes.position.needsUpdate = true;
@@ -553,13 +498,12 @@
             snowSystem.visible = false;
         }
 
-        // --- Top Star ---
         topStar.position.y = starOrigin.y - gravityDrop;
         topStar.material.opacity = 1 - state.scatterFactor;
         starGlow.material.opacity = 1.0 * (1 - state.scatterFactor);
         topStar.rotation.y += 0.05;
 
-        // --- Rotation ---
+        // 树旋转
         if (state.scatterFactor < 0.8) {
             if (state.isHandDetected) {
                 treeGroup.rotation.y += (-state.handRotation * 1.5 - treeGroup.rotation.y) * 0.05;
@@ -568,7 +512,6 @@
             }
         }
 
-        // --- Overlay Active Class ---
         if (state.isPinch && state.isHandDetected) photoOverlay.classList.add('active');
         else photoOverlay.classList.remove('active');
 
