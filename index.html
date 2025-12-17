@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Duplex Ventures Christmas (Refined)</title>
+    <title>Duplex Ventures Christmas (Fast Close)</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Lato', sans-serif; }
@@ -93,7 +93,9 @@
     <div id="canvas-container"></div>
 
 <script>
-    // 
+    // --------------------------------------------------------
+    // GENERATE CARD IMAGE
+    // --------------------------------------------------------
     function generateChristmasCard() {
         const cvs = document.createElement('canvas'); cvs.width = 600; cvs.height = 800;
         const ctx = cvs.getContext('2d');
@@ -110,7 +112,7 @@
     document.getElementById('card-image').src = generateChristmasCard();
 
     // ==========================================
-    // 1. 
+    // 1. THREE.JS SETUP
     // ==========================================
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
@@ -124,7 +126,7 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    // 
+    // TEXTURE GENERATION
     function createSuperGlowTexture() {
         const size = 64; const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
         const ctx = canvas.getContext('2d'); const c = size / 2;
@@ -138,7 +140,7 @@
     const particleTexture = createSuperGlowTexture();
     particleTexture.needsUpdate = true;
 
-    // ---  ---
+    // --- TREE PARTICLES ---
     const treeGroup = new THREE.Group(); treeGroup.position.y = 120; scene.add(treeGroup);
     
     const isMobile = window.innerWidth < 768;
@@ -198,7 +200,7 @@
     treeGroup.add(particles);
 
     // ==========================================
-    // 
+    // ORNAMENTS
     // ==========================================
     const ornamentGroup = new THREE.Group();
     treeGroup.add(ornamentGroup); 
@@ -228,15 +230,12 @@
         
         const hRatio = Math.random() * 0.85 + 0.05; 
         const y = (hRatio - 0.5) * treeHeight;
-        const r = baseRadius * (1 - hRatio) + 12; // 
+        const r = baseRadius * (1 - hRatio) + 12; 
         const theta = Math.random() * Math.PI * 2;
         
         const x = r * Math.cos(theta); const z = r * Math.sin(theta);
         
         sprite.position.set(x, y, z);
-        
-        // 
-        // 
         const randomScale = 4 + Math.random() * 4; 
         sprite.scale.set(randomScale, randomScale, 1); 
         
@@ -251,7 +250,7 @@
         });
     }
 
-    // 
+    // TOP STAR
     const topStar = new THREE.Mesh(new THREE.OctahedronGeometry(12, 0), new THREE.MeshBasicMaterial({ color: 0xffd700, wireframe: true }));
     const starOrigin = { x: 0, y: treeHeight/2 + 8, z: 0 };
     topStar.position.set(starOrigin.x, starOrigin.y, starOrigin.z);
@@ -260,7 +259,7 @@
     starGlow.scale.set(100, 100, 1); topStar.add(starGlow);
 
     // ==========================================
-    // 
+    // MAGIC TRAIL
     // ==========================================
     const trailCount = 60;
     const trailGeo = new THREE.BufferGeometry();
@@ -284,7 +283,7 @@
     let trailHead = 0;
 
     // ==========================================
-    // 
+    // SNOW SYSTEM
     // ==========================================
     const snowCount = 1000;
     const snowGeo = new THREE.BufferGeometry();
@@ -299,7 +298,7 @@
     scene.add(snowSystem); snowSystem.visible = false; 
 
     // ==========================================
-    // 
+    // HAND TRACKING
     // ==========================================
     let state = { 
         isHandDetected: false, handRotation: 0, isPinch: false, scatterFactor: 0, targetFactor: 0,
@@ -328,12 +327,12 @@
             const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
             state.isPinch = (pinchDist < 0.05 * (palmSize * 10) && state.targetFactor > 0.3);
 
-            // 
+            // Coordinates
             const screenX = (0.5 - lm[8].x) * 600; 
             const screenY = (0.5 - lm[8].y) * 450;
             state.handX = screenX; state.handY = screenY; state.handZ = 150; 
 
-            // 
+            // Gestures
             const iTip = Math.hypot(lm[8].x - wrist.x, lm[8].y - wrist.y);
             const mTip = Math.hypot(lm[12].x - wrist.x, lm[12].y - wrist.y);
             const rTip = Math.hypot(lm[16].x - wrist.x, lm[16].y - wrist.y);
@@ -355,7 +354,15 @@
     function animate() {
         requestAnimationFrame(animate);
         const time = Date.now() * 0.003; 
-        state.scatterFactor += (state.targetFactor - state.scatterFactor) * 0.03;
+
+        // ===============================================
+        // MODIFICATION: FASTER CLOSING SPEED
+        // ===============================================
+        // Old: state.scatterFactor += (state.targetFactor - state.scatterFactor) * 0.03;
+        // New: Check if we are closing (target < current). If so, use 0.1 (fast). If opening, use 0.03 (slow).
+        const animSpeed = (state.targetFactor < state.scatterFactor) ? 0.1 : 0.03;
+        state.scatterFactor += (state.targetFactor - state.scatterFactor) * animSpeed;
+        // ===============================================
 
         const t = state.scatterFactor;
         const explosionProgress = 1 - Math.pow(1 - t, 3);
@@ -375,7 +382,7 @@
             statusBar.style.opacity = 0;
         }
 
-        // 
+        // Trail Update
         const trailC = trailGeo.attributes.color.array;
         for(let i=0; i<trailCount; i++) {
             trailC[i*3] *= 0.85; trailC[i*3+1] *= 0.85; trailC[i*3+2] *= 0.85;
@@ -391,7 +398,7 @@
         trailGeo.attributes.position.needsUpdate = true;
         trailGeo.attributes.color.needsUpdate = true;
 
-        // 
+        // Tree Particles Logic
         for (let i = 0; i < particleCount; i++) {
             const ix = i * 3; const iy = i * 3 + 1; const iz = i * 3 + 2;
             let ox = initialPositions[ix]; let oy = initialPositions[iy]; let oz = initialPositions[iz];
@@ -400,7 +407,7 @@
             let ty = oy + scatterDirs[iy] * explosionProgress - gravityDrop;
             let tz = oz + scatterDirs[iz] * explosionProgress;
 
-            // 
+            // Interactive force
             if (state.isHandDetected && state.scatterFactor < 0.2) {
                 const dx = tx - state.handX; const dy = ty - state.handY; const dz = tz - state.handZ;
                 const distSq = dx*dx + dy*dy + dz*dz;
@@ -427,16 +434,16 @@
         posAttr.needsUpdate = true;
         colAttr.needsUpdate = true; 
 
-        // 
+        // Ornaments Logic
         for (let i = 0; i < ornamentCount; i++) {
             const data = ornamentData[i];
             const sprite = data.sprite;
-            // 
+            // Explosion
             let tx = data.ox + data.dx * explosionProgress;
             let ty = data.oy + data.dy * explosionProgress - gravityDrop;
             let tz = data.oz + data.dz * explosionProgress;
 
-            // 
+            // Interaction
             if (state.isHandDetected && state.scatterFactor < 0.2) {
                 const dx = tx - state.handX; const dy = ty - state.handY; const dz = tz - state.handZ;
                 const distSq = dx*dx + dy*dy + dz*dz;
