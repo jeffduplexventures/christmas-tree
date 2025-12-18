@@ -37,7 +37,7 @@
             text-shadow: 0 0 10px #00ffcc;
         }
 
-        /* 🔇 静音提示图标 (只有自动播放失败时才出现) */
+        /* 🔇  */
         #mute-indicator {
             position: fixed; top: 20px; right: 20px; z-index: 999;
             font-size: 24px; color: #d4af37; opacity: 0; transition: opacity 0.5s;
@@ -113,7 +113,7 @@
 
 <script>
     // ==========================================
-    // 0. 智能音频解锁逻辑 (Smart Unlock)
+    // 0. 
     // ==========================================
     const bgm = document.getElementById('bgm');
     const sfxChime = document.getElementById('sfx-chime');
@@ -124,26 +124,26 @@
 
     function playAudio() {
         bgm.play().then(() => {
-            // 播放成功，隐藏静音图标
+            // 
             muteIndicator.style.opacity = 0;
-            // 移除监听，节省性能
+            // 
             document.removeEventListener('click', playAudio);
             document.removeEventListener('touchstart', playAudio);
         }).catch(error => {
-            // 播放失败（被浏览器拦截），显示静音图标提示用户
+            // 
             console.log("Autoplay blocked, waiting for touch.");
             muteIndicator.style.opacity = 1;
         });
     }
 
-    // 1. 页面加载时立即尝试播放
+    // 1. 
     window.addEventListener('load', playAudio);
 
-    // 2. 只要用户碰到屏幕任何地方（哪怕不是点按钮），立即解锁音频
+    // 2. 
     document.addEventListener('click', playAudio);
     document.addEventListener('touchstart', playAudio);
     
-    // 3. 微信兼容
+    // 3. 
     document.addEventListener("WeixinJSBridgeReady", function () {
         bgm.play();
         muteIndicator.style.opacity = 0;
@@ -151,7 +151,7 @@
 
 
     // --------------------------------------------------------
-    // GENERATE CARD IMAGE
+    // 
     // --------------------------------------------------------
     function generateChristmasCard() {
         const cvs = document.createElement('canvas'); cvs.width = 600; cvs.height = 800;
@@ -169,7 +169,7 @@
     document.getElementById('card-image').src = generateChristmasCard();
 
     // ==========================================
-    // 1. THREE.JS SETUP
+    // 1. 
     // ==========================================
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
@@ -183,7 +183,7 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    // TEXTURE
+    // 
     function createSuperGlowTexture() {
         const size = 64; const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
         const ctx = canvas.getContext('2d'); const c = size / 2;
@@ -197,7 +197,7 @@
     const particleTexture = createSuperGlowTexture();
     particleTexture.needsUpdate = true;
 
-    // --- TREE PARTICLES ---
+    // ---   ---
     const treeGroup = new THREE.Group(); treeGroup.position.y = 120; scene.add(treeGroup);
     
     const isMobile = window.innerWidth < 768;
@@ -257,7 +257,7 @@
     treeGroup.add(particles);
 
     // ==========================================
-    // ORNAMENTS
+    // 
     // ==========================================
     const ornamentGroup = new THREE.Group();
     treeGroup.add(ornamentGroup); 
@@ -299,7 +299,7 @@
         });
     }
 
-    // TOP STAR
+    // 
     const topStar = new THREE.Mesh(new THREE.OctahedronGeometry(12, 0), new THREE.MeshBasicMaterial({ color: 0xffd700, wireframe: true }));
     const starOrigin = { x: 0, y: treeHeight/2 + 8, z: 0 };
     topStar.position.set(starOrigin.x, starOrigin.y, starOrigin.z);
@@ -307,7 +307,7 @@
     const starGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: particleTexture, color: 0xffd700, blending: THREE.AdditiveBlending, opacity: 1.0 }));
     starGlow.scale.set(100, 100, 1); topStar.add(starGlow);
 
-    // MAGIC TRAIL
+    // 
     const trailCount = 60;
     const trailGeo = new THREE.BufferGeometry();
     const trailPos = new Float32Array(trailCount * 3);
@@ -320,7 +320,7 @@
     scene.add(trailSystem);
     let trailHead = 0;
 
-    // SNOW SYSTEM
+    // 
     const snowCount = 1000;
     const snowGeo = new THREE.BufferGeometry();
     const snowPos = new Float32Array(snowCount * 3);
@@ -334,7 +334,7 @@
     scene.add(snowSystem); snowSystem.visible = false; 
 
     // ==========================================
-    // HAND TRACKING
+    // 
     // ==========================================
     let state = { 
         isHandDetected: false, handRotation: 0, isPinch: false, scatterFactor: 0, targetFactor: 0,
@@ -387,7 +387,7 @@
         }
     });
 
-    // 性能优化: 3帧一次
+    // 
     let frameCounter = 0;
     const cameraUtils = new Camera(videoElement, { 
         onFrame: async () => { 
@@ -404,7 +404,7 @@
         requestAnimationFrame(animate);
         const time = Date.now() * 0.003; 
 
-        // 快速关闭逻辑
+        // 
         const animSpeed = (state.targetFactor < state.scatterFactor) ? 0.1 : 0.03;
         state.scatterFactor += (state.targetFactor - state.scatterFactor) * animSpeed;
 
@@ -412,7 +412,7 @@
         const explosionProgress = 1 - Math.pow(1 - t, 3);
         const gravityDrop = 200 * t * t;
 
-        // 音效触发
+        // 
         if (t > 0.6 && !hasPlayedBoom) { sfxBoom.currentTime=0; sfxBoom.play().catch(()=>{}); hasPlayedBoom = true; }
         if (t < 0.2) { hasPlayedBoom = false; }
         if (state.isPinch && !hasPlayedChime) { sfxChime.currentTime=0; sfxChime.play().catch(()=>{}); hasPlayedChime = true; }
@@ -432,7 +432,7 @@
             statusBar.style.opacity = 0;
         }
 
-        // Trail Update
+        // 
         const trailC = trailGeo.attributes.color.array;
         for(let i=0; i<trailCount; i++) {
             trailC[i*3] *= 0.85; trailC[i*3+1] *= 0.85; trailC[i*3+2] *= 0.85;
@@ -448,7 +448,7 @@
         trailGeo.attributes.position.needsUpdate = true;
         trailGeo.attributes.color.needsUpdate = true;
 
-        // Tree Particles Logic
+        // 
         for (let i = 0; i < particleCount; i++) {
             const ix = i * 3; const iy = i * 3 + 1; const iz = i * 3 + 2;
             let ox = initialPositions[ix]; let oy = initialPositions[iy]; let oz = initialPositions[iz];
@@ -482,7 +482,7 @@
         posAttr.needsUpdate = true;
         colAttr.needsUpdate = true; 
 
-        // Ornaments Logic
+        // 
         for (let i = 0; i < ornamentCount; i++) {
             const data = ornamentData[i];
             const sprite = data.sprite;
