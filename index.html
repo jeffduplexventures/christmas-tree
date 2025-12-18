@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Duplex Ventures Christmas (AutoPlay Attempt)</title>
+    <title>Duplex Ventures Christmas (Auto-Unlock)</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Lato', sans-serif; user-select: none; }
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Lato', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
         #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
         
         #ui-layer {
@@ -37,7 +37,13 @@
             text-shadow: 0 0 10px #00ffcc;
         }
 
-        .input_video { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+        /* 🔇 静音提示图标 (只有自动播放失败时才出现) */
+        #mute-indicator {
+            position: fixed; top: 20px; right: 20px; z-index: 999;
+            font-size: 24px; color: #d4af37; opacity: 0; transition: opacity 0.5s;
+            background: rgba(0,0,0,0.5); padding: 10px; border-radius: 50%;
+            pointer-events: none;
+        }
         
         #loading {
             position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%);
@@ -76,16 +82,17 @@
 </head>
 <body>
 
-    <audio id="bgm" loop autoplay>
+    <audio id="bgm" loop preload="auto">
         <source src="https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3?filename=jingle-bells-violin-126487.mp3" type="audio/mpeg">
     </audio>
-    <audio id="sfx-chime">
+    <audio id="sfx-chime" preload="auto">
         <source src="https://cdn.pixabay.com/download/audio/2022/03/24/audio_c8c8a73467.mp3?filename=magic-wand-6214.mp3" type="audio/mpeg">
     </audio>
-    <audio id="sfx-boom">
+    <audio id="sfx-boom" preload="auto">
         <source src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_cda662e737.mp3?filename=fireworks-29629.mp3" type="audio/mpeg">
     </audio>
 
+    <div id="mute-indicator">🔇</div>
     <div id="loading">✨ Initializing...<br><span style="font-size:10px; opacity:0.7">Please allow camera</span></div>
 
     <div id="ui-layer">
@@ -104,36 +111,40 @@
 
 <script>
     // ==========================================
-    // 0. 强力自动播放逻辑 (Auto Play Hack)
+    // 0. 智能音频解锁逻辑 (Smart Unlock)
     // ==========================================
     const bgm = document.getElementById('bgm');
     const sfxChime = document.getElementById('sfx-chime');
     const sfxBoom = document.getElementById('sfx-boom');
+    const muteIndicator = document.getElementById('mute-indicator');
+    
     bgm.volume = 0.4;
 
-    function tryPlayMusic() {
-        // 尝试直接播放
+    function playAudio() {
         bgm.play().then(() => {
-            console.log("Auto-play successful");
+            // 播放成功，隐藏静音图标
+            muteIndicator.style.opacity = 0;
+            // 移除监听，节省性能
+            document.removeEventListener('click', playAudio);
+            document.removeEventListener('touchstart', playAudio);
         }).catch(error => {
-            console.log("Browser prevented auto-play. Waiting for interaction.");
-            // 如果失败，静默监听第一次点击或触摸，不显示提示，悄悄播放
-            const oneTimePlay = () => {
-                bgm.play();
-                document.removeEventListener('click', oneTimePlay);
-                document.removeEventListener('touchstart', oneTimePlay);
-            };
-            document.addEventListener('click', oneTimePlay);
-            document.addEventListener('touchstart', oneTimePlay);
+            // 播放失败（被浏览器拦截），显示静音图标提示用户
+            console.log("Autoplay blocked, waiting for touch.");
+            muteIndicator.style.opacity = 1;
         });
     }
 
-    // 1. 页面加载立即尝试
-    window.addEventListener('DOMContentLoaded', tryPlayMusic);
+    // 1. 页面加载时立即尝试播放
+    window.addEventListener('load', playAudio);
 
-    // 2. 微信/iOS 兼容 hack (如果是在微信里打开，这个通常有效)
+    // 2. 只要用户碰到屏幕任何地方（哪怕不是点按钮），立即解锁音频
+    document.addEventListener('click', playAudio);
+    document.addEventListener('touchstart', playAudio);
+    
+    // 3. 微信兼容
     document.addEventListener("WeixinJSBridgeReady", function () {
         bgm.play();
+        muteIndicator.style.opacity = 0;
     }, false);
 
 
@@ -354,12 +365,10 @@
             const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
             state.isPinch = (pinchDist < 0.05 * (palmSize * 10) && state.targetFactor > 0.3);
 
-            // 镜像坐标修正
             const screenX = (0.5 - lm[8].x) * 800; 
             const screenY = (0.5 - lm[8].y) * 600; 
             state.handX = screenX; state.handY = screenY; state.handZ = 150; 
 
-            // 手势判断
             const iTip = Math.hypot(lm[8].x - wrist.x, lm[8].y - wrist.y);
             const mTip = Math.hypot(lm[12].x - wrist.x, lm[12].y - wrist.y);
             const rTip = Math.hypot(lm[16].x - wrist.x, lm[16].y - wrist.y);
