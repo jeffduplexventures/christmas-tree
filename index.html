@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Duplex Ventures Christmas (Optimized)</title>
+    <title>Duplex Ventures Christmas (AutoPlay Attempt)</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Lato', sans-serif; user-select: none; }
@@ -36,16 +36,6 @@
             text-transform: uppercase; letter-spacing: 1px;
             text-shadow: 0 0 10px #00ffcc;
         }
-
-        /* 优化点：音乐提示条（不阻挡视线） */
-        #music-hint {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.6); color: #d4af37; border: 1px solid #d4af37;
-            padding: 10px 20px; border-radius: 30px; font-size: 14px; pointer-events: none;
-            opacity: 1; transition: opacity 1s; z-index: 999;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
         .input_video { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
         
@@ -86,7 +76,7 @@
 </head>
 <body>
 
-    <audio id="bgm" loop>
+    <audio id="bgm" loop autoplay>
         <source src="https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3?filename=jingle-bells-violin-126487.mp3" type="audio/mpeg">
     </audio>
     <audio id="sfx-chime">
@@ -96,7 +86,6 @@
         <source src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_cda662e737.mp3?filename=fireworks-29629.mp3" type="audio/mpeg">
     </audio>
 
-    <div id="music-hint">🎵 Tap anywhere for Music & Magic</div>
     <div id="loading">✨ Initializing...<br><span style="font-size:10px; opacity:0.7">Please allow camera</span></div>
 
     <div id="ui-layer">
@@ -115,21 +104,38 @@
 
 <script>
     // ==========================================
-    // 0. 音频控制 (点击任意处播放)
+    // 0. 强力自动播放逻辑 (Auto Play Hack)
     // ==========================================
     const bgm = document.getElementById('bgm');
     const sfxChime = document.getElementById('sfx-chime');
     const sfxBoom = document.getElementById('sfx-boom');
-    bgm.volume = 0.4; // 背景音乐小声点
+    bgm.volume = 0.4;
 
-    // 只需要点击一次屏幕，声音就会解锁
-    document.body.addEventListener('click', () => {
-        const hint = document.getElementById('music-hint');
-        if(hint) hint.style.opacity = 0;
-        if(bgm.paused) {
-            bgm.play().catch(e => console.log("Audio waiting..."));
-        }
-    }, { once: true });
+    function tryPlayMusic() {
+        // 尝试直接播放
+        bgm.play().then(() => {
+            console.log("Auto-play successful");
+        }).catch(error => {
+            console.log("Browser prevented auto-play. Waiting for interaction.");
+            // 如果失败，静默监听第一次点击或触摸，不显示提示，悄悄播放
+            const oneTimePlay = () => {
+                bgm.play();
+                document.removeEventListener('click', oneTimePlay);
+                document.removeEventListener('touchstart', oneTimePlay);
+            };
+            document.addEventListener('click', oneTimePlay);
+            document.addEventListener('touchstart', oneTimePlay);
+        });
+    }
+
+    // 1. 页面加载立即尝试
+    window.addEventListener('DOMContentLoaded', tryPlayMusic);
+
+    // 2. 微信/iOS 兼容 hack (如果是在微信里打开，这个通常有效)
+    document.addEventListener("WeixinJSBridgeReady", function () {
+        bgm.play();
+    }, false);
+
 
     // --------------------------------------------------------
     // GENERATE CARD IMAGE
@@ -315,7 +321,7 @@
     scene.add(snowSystem); snowSystem.visible = false; 
 
     // ==========================================
-    // HAND TRACKING (OPTIMIZED)
+    // HAND TRACKING
     // ==========================================
     let state = { 
         isHandDetected: false, handRotation: 0, isPinch: false, scatterFactor: 0, targetFactor: 0,
@@ -323,7 +329,6 @@
         handX: 0, handY: 0, handZ: 0 
     };
     
-    // 音效触发标记
     let hasPlayedBoom = false;
     let hasPlayedChime = false;
 
@@ -349,12 +354,9 @@
             const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
             state.isPinch = (pinchDist < 0.05 * (palmSize * 10) && state.targetFactor > 0.3);
 
-            // ----------------------------------------------------------------
-            // 优化点：镜像坐标修正 ( Mirroring )
-            // 使用 (0.5 - x) 来翻转 X 轴，并且乘以 800 增加灵敏度范围
-            // ----------------------------------------------------------------
+            // 镜像坐标修正
             const screenX = (0.5 - lm[8].x) * 800; 
-            const screenY = (0.5 - lm[8].y) * 600; // 稍微扩大Y轴范围
+            const screenY = (0.5 - lm[8].y) * 600; 
             state.handX = screenX; state.handY = screenY; state.handZ = 150; 
 
             // 手势判断
@@ -369,18 +371,12 @@
             state.isThumbsUp = (tTipDist > palmSize && iTip < palmSize * 1.5 && mTip < palmSize * 1.5);
 
         } else {
-            state.isHandDetected = false; 
-            state.isPinch = false; 
-            state.targetFactor = 0; // 手移开自动复原
-            state.isPeaceSign = false; 
-            state.isThumbsUp = false;
+            state.isHandDetected = false; state.isPinch = false; state.targetFactor = 0;
+            state.isPeaceSign = false; state.isThumbsUp = false;
         }
     });
 
-    // ----------------------------------------------------------------
-    // 优化点：性能优化 ( Frame Skipping )
-    // 每3帧才检测一次手势，大大降低手机发热
-    // ----------------------------------------------------------------
+    // 性能优化: 3帧一次
     let frameCounter = 0;
     const cameraUtils = new Camera(videoElement, { 
         onFrame: async () => { 
@@ -397,7 +393,7 @@
         requestAnimationFrame(animate);
         const time = Date.now() * 0.003; 
 
-        // 快速关闭逻辑 (Fast Close)
+        // 快速关闭逻辑
         const animSpeed = (state.targetFactor < state.scatterFactor) ? 0.1 : 0.03;
         state.scatterFactor += (state.targetFactor - state.scatterFactor) * animSpeed;
 
@@ -405,7 +401,7 @@
         const explosionProgress = 1 - Math.pow(1 - t, 3);
         const gravityDrop = 200 * t * t;
 
-        // 音效触发逻辑
+        // 音效触发
         if (t > 0.6 && !hasPlayedBoom) { sfxBoom.currentTime=0; sfxBoom.play().catch(()=>{}); hasPlayedBoom = true; }
         if (t < 0.2) { hasPlayedBoom = false; }
         if (state.isPinch && !hasPlayedChime) { sfxChime.currentTime=0; sfxChime.play().catch(()=>{}); hasPlayedChime = true; }
@@ -450,7 +446,6 @@
             let ty = oy + scatterDirs[iy] * explosionProgress - gravityDrop;
             let tz = oz + scatterDirs[iz] * explosionProgress;
 
-            // Interactive force
             if (state.isHandDetected && state.scatterFactor < 0.2) {
                 const dx = tx - state.handX; const dy = ty - state.handY; const dz = tz - state.handZ;
                 const distSq = dx*dx + dy*dy + dz*dz;
@@ -459,7 +454,6 @@
                     tx += dx * force * 0.8; ty += dy * force * 0.8; tz += dz * force * 0.8;
                 }
             }
-
             posAttr.array[ix] = tx; posAttr.array[iy] = ty; posAttr.array[iz] = tz;
 
             let baseBlink = 0.5 + 0.5 * Math.sin(time * blinkSpeeds[i] + blinkOffsets[i]);
